@@ -1,40 +1,20 @@
-import express from "express";
-import dotenv from "dotenv";
-import authorizeApiAccess from "./middlewares/ApiAccess";
-import CommodityController from "./controllers/CommodityController";
-import TransactionController from "./controllers/TransactionController";
-import AuthController from "./controllers/AuthController";
-// import MailController from "./controllers/MailController";
-import NotificationController from "./controllers/NotificationController";
-import MediaController from "./controllers/MediaController";
-import MarketingController from "./controllers/MarketingController";
-import CORS from "cors";
-import GeneralControllers from "./controllers/GeneralControllers";
+import express from 'express'
+import api_access from './middlewares/api_access'
+import BlogPostController from './controllers/BlogPostController'
+import dotenv  from "dotenv"
 
-dotenv.config();
 
-const PORT = process.env.PORT;
-const app: express.Application = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(authorizeApiAccess);
-app.use(CORS());
+dotenv.config()
+let PORT = process.env.PORT || 5000
+const app:express.Application = express()
+app.use(api_access)
+app.use(express.json())
+app.use(express.urlencoded({extended:false}))
+app.use(BlogPostController)
 
-AuthController(app);
-// MailController(app);
-MediaController(app);
-CommodityController(app);
-TransactionController(app);
-NotificationController(app);
-MarketingController(app);
-GeneralControllers(app)
+app.listen(PORT,()=>{
+    console.log(`Listening to port ${PORT}`)
+})
 
-app.get("/", (request: express.Request, response: express.Response) => {
-    response.status(200).json({
-        message: "Getting started with Commodity",
-    });
-});
 
-app.listen(PORT, () => {
-    console.log("Listening to port ", PORT);
-});
+

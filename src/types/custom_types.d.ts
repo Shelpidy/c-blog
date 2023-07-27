@@ -2,40 +2,39 @@ declare type User = {
     userId: string;
     profilePicture: string;
     displayName: string;
-  };
+};
 
-  declare type Comment = {
-    commentId:string;
+declare type Comment = {
+    commentId: string;
     content: string;
-    author: User;
+    user: User;
     createAt: string;
-    lastUpdatedAt: string;
-    likes:Like[] | number
-    commnts?:Comment[] | number
-  };
+    lastlastUpdatedBy: string;
+    likes: Like[] | number;
+    comments?: Comment[] | number;
+};
 
-  declare type Contributor = User;
-  
-  declare type Like = {
-    likeId:string;
+declare type Contributor = User;
+
+declare type Like = {
+    likeId: string;
     likeAt: string;
-    likeBy: User;
-  };
-  
-  declare type Blog = {
+    user: User;
+};
+
+declare type Blog = {
     blogId: string;
     title: string;
     url: string;
     content: string;
-    tags: string[];
-    posterImage: string;
+    tags: User[];
+    imageUrl: string;
     author: User;
     createAt: string;
-    lastUpdatedAt: string;
+    lastlastUpdatedBy: string;
     publishedAt: string;
     contributors: Contributor[];
     likes: Like[] | number;
-    comments:Comment[] | number,
+    comments: Comment[] | number;
     status: "draft" | "published";
-  };
-  
+};

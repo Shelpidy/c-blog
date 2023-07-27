@@ -47,12 +47,11 @@ services:
     nginx:
         container_name: nginx_container
         build:
-           context: ./nginx/
-           dockerfile: Dockerfile
+            context: ./nginx/
+            dockerfile: Dockerfile
         ports:
-          - 5000:80
+            - 5000:80
         depends_on:
-          - slms_blogpost_api_server_1
-          - slms_blogpost_api_server_2
-          - slms_blogpost_api_server_3
-             
+            - slms_blogpost_api_server_1
+            - slms_blogpost_api_server_2
+            - slms_blogpost_api_server_3

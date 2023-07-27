@@ -1,0 +1,71 @@
+-- Create Users table
+CREATE TABLE Users (
+  userId BINARY(16) PRIMARY KEY,
+  profilePicture VARCHAR(255),
+  displayName VARCHAR(255) NOT NULL,
+  createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create BlogPosts table
+CREATE TABLE BlogPosts (
+  blogId BINARY(16) PRIMARY KEY,
+  userId BINARY(16) NOT NULL,
+  slug BINARY(16),
+  lastUpdatedById BINARY(16),
+  publishedById BINARY(16),
+  title VARCHAR(255),
+  tags JSON,
+  editors JSON,
+  url VARCHAR(255),
+  summary VARCHAR(255),
+  content TEXT,
+  imageUrl VARCHAR(255),
+  status ENUM('draft', 'published'),
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  publishedAt DATETIME,
+  FOREIGN KEY (userId) REFERENCES Users (userId) ON DELETE CASCADE ON UPDATE CASCADE,
+  FOREIGN KEY (lastUpdatedById) REFERENCES Users (userId) ON UPDATE CASCADE,
+  FOREIGN KEY (publishedById) REFERENCES Users (userId) ON UPDATE CASCADE
+);
+
+-- Create Likes table
+CREATE TABLE Likes (
+  likeId BINARY(16) PRIMARY KEY,
+  refId BINARY(16) NOT NULL,
+  userId BINARY(16) NOT NULL,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES Users (userId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Create Comments table
+CREATE TABLE Comments (
+  commentId BINARY(16) PRIMARY KEY,
+  refId BINARY(16) NOT NULL,
+  userId BINARY(16) NOT NULL,
+  content TEXT NOT NULL,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES Users (userId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Create Shares table
+CREATE TABLE Shares (
+  shareId BINARY(16) PRIMARY KEY,
+  refId BINARY(16),
+  userId BINARY(16) NOT NULL,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES Users (userId) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Create Editors table
+CREATE TABLE Editors (
+  editorId BINARY(16) PRIMARY KEY,
+  userId BINARY(16) NOT NULL,
+  createdAt DATETIME NOT NULL,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (userId) REFERENCES Users (userId) ON DELETE CASCADE ON UPDATE CASCADE
+);

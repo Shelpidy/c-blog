@@ -27,7 +27,7 @@ Comment.init(
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        createAt: {
+        createdAt: {
             type: DataTypes.DATE,
             allowNull: false,
         },

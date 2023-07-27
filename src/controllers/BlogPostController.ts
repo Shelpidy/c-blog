@@ -44,16 +44,16 @@ export default function mediaController(app: express.Application) {
                     where: { refId: post.getDataValue("blogId") },
                 });
                 let createdBy = await User.findOne({
-                    where: { refId: post.getDataValue("userId") },
+                    where: { userId: post.getDataValue("userId") },
                 });
                 let publishedBy = await User.findOne({
                     where: { userId: post.getDataValue("publishedById") },
                 });
                 let lastUpdatedBy = await User.findOne({
-                    where: { userId: post.getDataValue("lastUpdateById") },
+                    where: { userId: post.getDataValue("lastUpdatedById") },
                 });
                 let editors = await User.findAll({
-                    where: { userId: [post.getDataValue("editors")] },
+                    where: { userId:post.getDataValue("editors")},
                 });
                 // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
                 let likedByMe = likes.rows.some(
@@ -91,7 +91,7 @@ export default function mediaController(app: express.Application) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    message: err,
+                    message: String(err),
                 });
             }
         }

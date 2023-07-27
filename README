@@ -1,0 +1,14 @@
+## Steps to run the BlogPost server
+**Step 1**
+__Installing dependencies__
+- In your terminal run `npm install` to install depencies
+
+**Step 2**
+__creating database and entities__
+- In your terminal run `npx sequelize db:create` to create database
+- run `npx sequelize db:migrate`to create all the 
+
+**Step 3**
+__creating database and entities__
+- In your terminal run `npm run dev` to spin-up the server
+

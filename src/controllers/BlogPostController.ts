@@ -100,11 +100,11 @@ export default function mediaController(app: express.Application) {
     /////////////////// GET ALL USER POSTS /////////////
 
     app.get(
-        "/blogs/users/:pageNumber/:numberOfRecords",
+        "/blogs/users/",
         async (req: express.Request, res: express.Response) => {
             try {
                 const { userId } = res.locals;
-                const { pageNumber, numberOfRecords } = req.params;
+                const { pageNumber = 1, numberOfRecords = 100 } = req.query;
                 let numRecs = Number(numberOfRecords);
                 let start = (Number(pageNumber) - 1) * numRecs;
                 const posts = await BlogPost.findAll({
@@ -166,10 +166,10 @@ export default function mediaController(app: express.Application) {
 
     // Get all posts
 
-    app.get("/blogs/:pageNumber/:numberOfRecords", async (req, res) => {
+    app.get("/blogs/", async (req, res) => {
         try {
             const { userId } = res.locals;
-            const { pageNumber, numberOfRecords } = req.params;
+            const { pageNumber = 1, numberOfRecords = 100 } = req.query;
             let numRecs = Number(numberOfRecords);
             let start = (Number(pageNumber) - 1) * numRecs;
             const posts = await BlogPost.findAll({
@@ -222,7 +222,7 @@ export default function mediaController(app: express.Application) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json({
                 status: responseStatus.ERROR,
-                message: err,
+                message: String(err),
             });
         }
     });
@@ -238,9 +238,10 @@ export default function mediaController(app: express.Application) {
                 tags: string[];
             } = req.body;
             console.log({htmlContent:postObj.content})
-            let htmlScrapper = new HTMLScrapper({ html:postObj.content});
-            let imageUrl = await htmlScrapper.getImageSrc();
-            let summary = await htmlScrapper.getSummary();
+            let htmlScrapper = new HTMLScrapper();
+           
+            let summary = await htmlScrapper.getSummary({html:postObj.content});
+            let imageUrl = await htmlScrapper.getImageSrc({html:postObj.content});
 
             let slug = v4();
             const { userId } = res.locals;
@@ -262,7 +263,7 @@ export default function mediaController(app: express.Application) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json({
                 status: responseStatus.ERROR,
-                message: err,
+                message: String(err),
             });
         }
     });
@@ -272,16 +273,15 @@ export default function mediaController(app: express.Application) {
         try {
             let blogId = req.params.blogId;
             const { userId } = res.locals;
+            var updatedPostObj;
             const postObj: {
-                title: string;
-                content: string;
-                status: string;
-                tags: string[];
-                slug: string;
+                title?: string;
+                content?: string;
+                status?: string;
+                tags?: string[];
             } = req.body;
-            let htmlScrapper = new HTMLScrapper({ html: postObj.content });
-            let summary = await htmlScrapper.getSummary();
-            let imageUrl = await htmlScrapper.getImageSrc();
+            let htmlScrapper = new HTMLScrapper();
+           
             const post = await BlogPost.findByPk(blogId);
             if (!post) {
                 return res
@@ -293,29 +293,55 @@ export default function mediaController(app: express.Application) {
                         )
                     );
             }
-            const updatedPostObj = {
+            if(postObj.content){
+                let summary = await htmlScrapper.getSummary({html: postObj.content });
+                let imageUrl = await htmlScrapper.getImageSrc({html:postObj.content});
+                updatedPostObj = {
+                    ...postObj,
+                    summary,
+                    imageUrl,
+                    userId,
+                };
+
+            }
+            updatedPostObj = {
                 ...postObj,
-                summary,
-                imageUrl,
                 userId,
             };
-            const newPost = await BlogPost.update(updatedPostObj, {
+            const affectedRow = await BlogPost.update(updatedPostObj, {
                 where: { blogId },
             });
+            let updatedBlog = await BlogPost.findByPk(blogId)
             res.status(responseStatusCode.ACCEPTED).json({
                 status: responseStatus.SUCCESS,
-                items: {
-                    affectedRow: newPost,
-                },
+                item:updatedBlog?.dataValues || {},
+                affectedRow
             });
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json({
                 status: responseStatus.ERROR,
-                message: err,
+                message: String(err),
             });
         }
     });
+
+  ////////////////////// Get All Blog Status ////////////////////
+
+  app.get("/status", async (req: express.Request, res: express.Response) => {
+    try {
+        res.status(responseStatusCode.OK).json(
+            getResponseBody(responseStatus.SUCCESS, "", {
+                items: ["Published","Draft"],
+            })
+        );
+    } catch (err) {
+        console.log(err);
+        res.status(responseStatusCode.BAD_REQUEST).json(
+            getResponseBody(responseStatus.ERROR, "", { message: String(err) })
+        );
+    }
+});
 
     // Delete a post
     app.delete("/blogs/:blogId", async (req, res) => {
@@ -341,7 +367,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -381,7 +407,7 @@ export default function mediaController(app: express.Application) {
                             responseStatus.SUCCESS,
                             "unliked a post successfully",
                             {
-                                items: {
+                                item: {
                                     affectedRow,
                                     likedByMe: false,
                                     likeCounts: likes.count - 1,
@@ -400,7 +426,7 @@ export default function mediaController(app: express.Application) {
                     responseStatus.SUCCESS,
                     "Liked a post sucessfully",
                     {
-                        items: {
+                        item: {
                             affectedRow: 1,
                             likedByMe: true,
                             likeCounts: likes.count + 1,
@@ -411,7 +437,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -443,7 +469,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -453,29 +479,25 @@ export default function mediaController(app: express.Application) {
     //////////////////// Get all Editors of a blog post /////////////////////
 
     app.get("/blogs/:blogId/editors", async (req, res) => {
-        const { blogId } = req.params;
+       
 
         try {
-            const editors = await Editor.findAndCountAll({
-                where: { blogId },
-            });
-
-            const users = await Promise.all(
-                editors.rows.map(async (editor) => {
-                    let user = await User.findOne({
-                        where: { userId: editor.getDataValue("userId") },
+            const { blogId } = req.params;
+            const blog = await BlogPost.findOne({
+                where:{blogId}
+            })
+           
+            const users = await User.findAll({
+                        where: { userId: blog?.getDataValue("editors") ||''},
                     });
-                    return user?.dataValues;
-                })
-            );
-
+                   
             res.status(responseStatusCode.OK).json(
                 getResponseBody(responseStatus.SUCCESS, "", { items: users })
             );
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err)})
             );
         }
     });
@@ -484,14 +506,15 @@ export default function mediaController(app: express.Application) {
 
     // Get all comments for a specific post
     app.get(
-        "/blogs/:blogId/comments/:pageNumber/:numberOfRecords",
+        "/blogs/:blogId/comments/",
         async (req, res) => {
-            const { blogId, pageNumber, numberOfRecords } = req.params;
-            let { userId } = res.locals;
-            let numRecs = Number(numberOfRecords);
-            let start = (Number(pageNumber) - 1) * numRecs;
-
+           
             try {
+                const {blogId} = req.params
+                const { pageNumber = 1, numberOfRecords = 100 } = req.query;
+                let { userId } = res.locals;
+                let numRecs = Number(numberOfRecords);
+                let start = (Number(pageNumber) - 1) * numRecs;
                 const comments = await Comment.findAll({
                     where: { refId: blogId },
                     order: [["createdAt", "DESC"]],
@@ -536,7 +559,7 @@ export default function mediaController(app: express.Application) {
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: err })
+                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
                 );
             }
         }
@@ -557,13 +580,13 @@ export default function mediaController(app: express.Application) {
                 getResponseBody(
                     responseStatus.SUCCESS,
                     `Successsfully added a comment to blogId = ${blogId}`,
-                    { items: comment.dataValues }
+                    { item: comment.dataValues }
                 )
             );
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -593,7 +616,7 @@ export default function mediaController(app: express.Application) {
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: err })
+                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
                 );
             }
         }
@@ -604,6 +627,18 @@ export default function mediaController(app: express.Application) {
         const { content } = req.body;
         const commentId = req.params.commentId;
         try {
+            const comment = await Comment.findByPk(commentId)
+            if(!comment){
+                return res
+                    .status(responseStatusCode.UNPROCESSIBLE_ENTITY)
+                    .json(
+                        getResponseBody(
+                            responseStatus.UNPROCESSED,
+                            "Comment with given commentId does not exist"
+                        )
+                    );
+
+            }
             const affectedRow = await Comment.update(
                 { content },
                 { where: { commentId } }
@@ -620,15 +655,14 @@ export default function mediaController(app: express.Application) {
             }
             res.status(responseStatusCode.ACCEPTED).json(
                 getResponseBody(responseStatus.SUCCESS, "Update successfully", {
-                    items: {
-                        affectedRow,
-                    },
+                   item:{...comment.dataValues,content:content},
+                   affectedRow,
                 })
             );
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -668,7 +702,7 @@ export default function mediaController(app: express.Application) {
                             responseStatus.SUCCESS,
                             "unliked a comment successfully",
                             {
-                                items: {
+                                item: {
                                     affectedRow,
                                     likedByMe: false,
                                     likesCount: likes.count - 1,
@@ -696,7 +730,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -728,7 +762,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -737,9 +771,10 @@ export default function mediaController(app: express.Application) {
 
     // Get all replies
     app.get(
-        "/comments/:commentId/:pageNumber/:numberOfRecords",
+        "/comments/:commentId/",
         async (req, res) => {
-            const { commentId, pageNumber, numberOfRecords } = req.params;
+            const {commentId} = req.params
+            const { pageNumber = 1, numberOfRecords = 100 } = req.query;
             let { userId } = res.locals;
             let numRecs = Number(numberOfRecords);
             let start = (Number(pageNumber) - 1) * numRecs;
@@ -755,7 +790,7 @@ export default function mediaController(app: express.Application) {
                 if (comments.length < 1) {
                     return res
                         .status(responseStatusCode.OK)
-                        .json(getResponseBody(responseStatus.SUCCESS, "", []));
+                        .json(getResponseBody(responseStatus.SUCCESS, "",{items:[]}));
                 }
 
                 const _comments = await Promise.all(
@@ -789,7 +824,7 @@ export default function mediaController(app: express.Application) {
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: err })
+                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
                 );
             }
         }
@@ -817,7 +852,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -842,7 +877,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -871,7 +906,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -900,7 +935,7 @@ export default function mediaController(app: express.Application) {
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: err })
+                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
                 );
             }
         }
@@ -924,7 +959,7 @@ export default function mediaController(app: express.Application) {
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: err })
+                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
             );
         }
     });
@@ -935,7 +970,14 @@ export default function mediaController(app: express.Application) {
         "/bloggers",
         async (req: express.Request, res: express.Response) => {
             try {
-                const users = await User.findAll();
+                const { pageNumber = 1, numberOfRecords = 100 } = req.query;
+                let numRecs = Number(numberOfRecords);
+                let start = (Number(pageNumber) - 1) * numRecs;
+                const users = await User.findAll({
+                    offset:start,
+                    limit:numRecs
+                
+                });
 
                 res.status(responseStatusCode.OK).json(
                     getResponseBody(responseStatus.SUCCESS, "", {
@@ -945,16 +987,44 @@ export default function mediaController(app: express.Application) {
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: err })
+                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
                 );
             }
         }
     );
 
+
+        ////////////////////// Get a blogger by blogId ////////////////////
+
+        app.get(
+            "/bloggers/:userId",
+            async (req: express.Request, res: express.Response) => {
+                try {
+                
+                    const userId = req.params.userId
+                    const blogger = await User.findOne({
+                       where:{userId}
+        
+                    });
+    
+                    res.status(responseStatusCode.OK).json(
+                        getResponseBody(responseStatus.SUCCESS, "", {
+                            item:blogger,
+                        })
+                    );
+                } catch (err) {
+                    console.log(err);
+                    res.status(responseStatusCode.BAD_REQUEST).json(
+                        getResponseBody(responseStatus.ERROR, "", { message: String(err) })
+                    );
+                }
+            }
+        );
+
     //////////////////// Delete a Blogger or User //////////////////
 
     app.delete(
-        "/blogger/:userId",
+        "/bloggers/:userId",
         async (req: express.Request, res: express.Response) => {
             const { userId } = req.params;
             try {
@@ -975,7 +1045,7 @@ export default function mediaController(app: express.Application) {
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: err })
+                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
                 );
             }
         }

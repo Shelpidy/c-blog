@@ -10,28 +10,11 @@ type HTMLScrapperParams = {
 export class HTMLScrapper {
     public summary: string = "No Summary";
     public imageUrl: string = "No Image";
-    public html: string = `<html><p>Hello world<p><html/>`;
     public url: string = "http://google.com";
-    public constructor(public input: HTMLScrapperParams) {
-        this.html = input.html ?? "";
-        this.url = input.url ?? "";
-    }
-    /**
-     * getSummary
-     */
-    public async getSummary() {
-        try {
-            await this.setContentFromXray("p", "INNERCONTENT");
-            console.log(this.summary);
-            return this.summary;
-        } catch (err) {
-            console.log("Error in getSummary", err);
-        }
-    }
-    public async setContentFromXray(name: string, _type: string) {
+
+    public async setContentFromXray(name: string, _type: string,htmlContent:string) {
         try {
             let xray = Xray();
-            let htmlContent = this.html;
             console.log("HTML Content", htmlContent);
             switch (_type) {
                 case "ATTRIBUTE":
@@ -68,10 +51,24 @@ export class HTMLScrapper {
     }
 
     /**
+     * getSummary
+     */
+    public async getSummary({html:htmlContent}:{html:string}) {
+        try {
+            await this.setContentFromXray("p", "INNERCONTENT",htmlContent);
+            console.log(this.summary);
+            return this.summary;
+        } catch (err) {
+            console.log("Error in getSummary", err);
+        }
+    }
+
+
+    /**
      * getImage
      */
-    public async getImageSrc() {
-        await this.setContentFromXray("src", "ATTRIBUTE");
+    public async getImageSrc({html:htmlContent}:{html:string}) {
+        await this.setContentFromXray("src", "ATTRIBUTE",htmlContent);
         console.log(this.imageUrl);
         return this.imageUrl;
     }
@@ -92,7 +89,7 @@ export class HTMLScrapper {
 let html = `<div> <p>Hello,This is a paragraph Two <p/> <img src ='https://picsum.photos/200/300'/><div/>
 `;
 // let scrapper = new HTMLScrapper({ html: html });
-// jwtEncode({userId:"308ed526-b8b9-4f06-a545-07e4c9a1fa58"}).then(data=>{
+// jwtEncode({userId:"00126542-83e1-4480-928b-d1349580f4fb"}).then(data=>{
 //     console.log("Encoded JWT Data",data)
 // })
 

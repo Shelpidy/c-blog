@@ -5,15 +5,14 @@ import {
     responseStatusCode,
 } from "../utils/utils";
 import { v4 } from "uuid";
-
 import { Op } from "sequelize";
 import User from "../models/Users";
-import BlogPost from "../models/BlogPosts";
+import Blog from "../models/Blogs";
 import Like from "../models/Likes";
 import Comment from "../models/Comments";
 import Share from "../models/Shares";
 import { HTMLScrapper } from "../services/services";
-import Editor from "../models/Editors";
+import Follow from "../models/Follows";
 
 export default function mediaController(app: express.Application) {
     ///////////////// GET A SINGLE POST DATA BY blogId ////////////////////////////
@@ -24,7 +23,7 @@ export default function mediaController(app: express.Application) {
             const { blogId } = req.params;
             const { userId } = res.locals;
             try {
-                const post = await BlogPost.findOne({
+                const post = await Blog.findOne({
                     where: { blogId },
                 });
 
@@ -34,54 +33,37 @@ export default function mediaController(app: express.Application) {
                         message: `Post with id ${blogId} does not exist`,
                     });
                 }
-                let comments = await Comment.findAndCountAll({
-                    where: { refId: post.getDataValue("blogId") },
-                });
+               
                 let likes = await Like.findAndCountAll({
                     where: { refId: post.getDataValue("blogId") },
                 });
+            
                 let shares = await Share.findAndCountAll({
+                    where: { refId: post.getDataValue("blogId") },
+                });
+                let comments = await Comment.findAndCountAll({
                     where: { refId: post.getDataValue("blogId") },
                 });
                 let createdBy = await User.findOne({
                     where: { userId: post.getDataValue("userId") },
                 });
-                let publishedBy = await User.findOne({
-                    where: { userId: post.getDataValue("publishedById") },
+
+                let ownedBy = await User.findOne({
+                    where: { userId: post.getDataValue("fromUserId") },
                 });
-                let lastUpdatedBy = await User.findOne({
-                    where: { userId: post.getDataValue("lastUpdatedById") },
-                });
-                let editors = await User.findAll({
-                    where: { userId:post.getDataValue("editors")},
-                });
+            
                 // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
-                let likedByMe = likes.rows.some(
+                let liked = likes.rows.some(
                     (like) => like.getDataValue("userId") == userId
                 );
                 let returnPost = {
-                    blogId: post.getDataValue("blogId"),
-                    slug: post.getDataValue("slug"),
-                    title: post.getDataValue("title"),
-                    imageUrl: post.getDataValue("imageUrl"),
-                    content: post.getDataValue("content"),
-                    summary: post.getDataValue("summary"),
-                    url: post.getDataValue("url"),
-                    status: post.getDataValue("status"),
-                    tags: post.getDataValue("tags"),
-                    createdAt: post.getDataValue("createdAt"),
-                    updatedAt: post.getDataValue("updatedAt"),
-                    publishedAt: post.getDataValue("publishedAt"),
-                    likedByMe,
-                    commentsCount: comments.count,
+                    blog:post.dataValues,
+                    liked,
                     likesCount: likes.count,
                     sharesCount: shares.count,
+                    commentsCount:comments.count, 
                     createdBy,
-                    publishedBy,
-                    lastUpdatedBy,
-                    editors: {
-                        items: editors,
-                    },
+                    ownedBy:ownedBy || null
                 };
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
@@ -100,53 +82,50 @@ export default function mediaController(app: express.Application) {
     /////////////////// GET ALL USER POSTS /////////////
 
     app.get(
-        "/blogs/users/",
+        "/blogs/users/:userId",
         async (req: express.Request, res: express.Response) => {
             try {
-                const { userId } = res.locals;
-                const { pageNumber = 1, numberOfRecords = 100 } = req.query;
+                const { userId } = req.params;
+                const { pageNumber = 1, numberOfRecords = 100} = req.query;
                 let numRecs = Number(numberOfRecords);
                 let start = (Number(pageNumber) - 1) * numRecs;
-                const posts = await BlogPost.findAll({
+                const posts = await Blog.findAll({
                     where: { userId },
                     order: [["createdAt", "DESC"]],
                     limit: numRecs,
-                    offset: start,
+                    offset: start
                 });
                 let returnPosts = await Promise.all(
                     posts.map(async (post) => {
                         let likes = await Like.findAndCountAll({
-                            where: { blogId: post.getDataValue("blogId") },
+                            where: { refId: post.getDataValue("blogId") },
                         });
                         let shares = await Share.findAndCountAll({
-                            where: { blogId: post.getDataValue("blogId") },
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let comments = await Comment.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
                         });
                         let createdBy = await User.findOne({
                             where: { userId: post.getDataValue("userId") },
                         });
-                        let editors = await User.findAll({
-                            where: { userId: [post.getDataValue("editors")] },
+
+                        let ownedBy = await User.findOne({
+                            where: { userId: post.getDataValue("fromUserId") },
                         });
+                    
                         // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
-                        let likedByMe = likes.rows.some(
+                        let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
                         return {
-                            blogId: post.getDataValue("blogId"),
-                            slug: post.getDataValue("slug"),
-                            title: post.getDataValue("title"),
-                            imageUrl: post.getDataValue("imageUrl"),
-                            summary: post.getDataValue("summary"),
-                            tags: post.getDataValue("tags"),
-                            createdAt: post.getDataValue("createdAt"),
-                            updatedAt: post.getDataValue("updatedAt"),
-                            likedByMe,
+                            blog:post.dataValues,
+                            liked,
                             likesCount: likes.count,
                             sharesCount: shares.count,
+                            commentsCount:comments.count, 
                             createdBy,
-                            editors: {
-                                items: editors,
-                            },
+                            ownedBy:ownedBy || null
                         };
                     })
                 );
@@ -164,6 +143,85 @@ export default function mediaController(app: express.Application) {
         }
     );
 
+     /////////////////// GET ALL POST BY A USER SESSION /////////////
+
+     app.get(
+        "/blogs/sessions/",
+        async (req: express.Request, res: express.Response) => {
+           
+            try {
+                const { userId} = res.locals;
+                const { pageNumber = 1, numberOfRecords = 100} = req.query;
+                let numRecs = Number(numberOfRecords);
+                let start = (Number(pageNumber) - 1) * numRecs;
+        
+                let ids = (
+                    await Follow.findAll({
+                        where:{[Op.or]:[{ followerId: userId },{followingId:userId}]},
+                    })
+                ).map((obj) => obj.getDataValue("followingId"));
+                //   console.log(ids)
+                const posts = await Blog.findAll({
+                    where: { userId: [...ids, userId] },
+                    order: [["createdAt", "DESC"]],
+                    limit:numRecs,
+                    offset:start
+                });
+
+                if (!posts) {
+                    return res.status(responseStatusCode.NOT_FOUND).json({
+                        status: responseStatus.ERROR,
+                        message: `Post with userId ${userId} does not exist`,
+                    });
+                }
+                let returnPosts = await Promise.all(
+                    posts.map(async (post) => {
+                        let likes = await Like.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let shares = await Share.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let comments = await Comment.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let createdBy = await User.findOne({
+                            where: { userId: post.getDataValue("userId") },
+                        });
+
+                        let ownedBy = await User.findOne({
+                            where: { userId: post.getDataValue("fromUserId") },
+                        });
+                    
+                        // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
+                        let liked = likes.rows.some(
+                            (like) => like.getDataValue("userId") == userId
+                        );
+                        return {
+                            blog:post.dataValues,
+                            liked,
+                            likesCount: likes.count,
+                            sharesCount: shares.count,
+                            commentsCount:comments.count, 
+                            createdBy,
+                            ownedBy:ownedBy || null
+                        };
+                    })
+                );
+                res.status(responseStatusCode.OK).json({
+                    status: responseStatus.SUCCESS,
+                    items: returnPosts,
+                });
+            } catch (err) {
+                console.log(err);
+                res.status(responseStatusCode.BAD_REQUEST).json({
+                    status: responseStatus.ERROR,
+                    message:String(err),
+                });
+            }
+        }
+    );
+
     // Get all posts
 
     app.get("/blogs/", async (req, res) => {
@@ -172,7 +230,7 @@ export default function mediaController(app: express.Application) {
             const { pageNumber = 1, numberOfRecords = 100 } = req.query;
             let numRecs = Number(numberOfRecords);
             let start = (Number(pageNumber) - 1) * numRecs;
-            const posts = await BlogPost.findAll({
+            const posts = await Blog.findAll({
                 order: [["createdAt", "DESC"]],
                 limit: numRecs,
                 offset: start,
@@ -185,32 +243,29 @@ export default function mediaController(app: express.Application) {
                     let shares = await Share.findAndCountAll({
                         where: { refId: post.getDataValue("blogId") },
                     });
+                    let comments = await Comment.findAndCountAll({
+                        where: { refId: post.getDataValue("blogId") },
+                    });
                     let createdBy = await User.findOne({
                         where: { userId: post.getDataValue("userId") },
                     });
-                    let editors = await User.findAll({
-                        where: { userId: [post.getDataValue("editors")] },
+
+                    let ownedBy = await User.findOne({
+                        where: { userId: post.getDataValue("fromUserId") },
                     });
+                
                     // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
-                    let likedByMe = likes.rows.some(
+                    let liked = likes.rows.some(
                         (like) => like.getDataValue("userId") == userId
                     );
                     return {
-                        blogId: post.getDataValue("blogId"),
-                        slug: post.getDataValue("slug"),
-                        title: post.getDataValue("title"),
-                        imageUrl: post.getDataValue("imageUrl"),
-                        summary: post.getDataValue("summary"),
-                        tags: post.getDataValue("tags"),
-                        createdAt: post.getDataValue("createdAt"),
-                        updatedAt: post.getDataValue("updatedAt"),
-                        likedByMe,
+                        blog:post.dataValues,
+                        liked,
                         likesCount: likes.count,
                         sharesCount: shares.count,
+                        commentsCount:comments.count, 
                         createdBy,
-                        editors: {
-                            items: editors,
-                        },
+                        ownedBy:ownedBy || null
                     };
                 })
             );
@@ -231,33 +286,25 @@ export default function mediaController(app: express.Application) {
 
     app.post("/blogs", async (req, res) => {
         try {
-            const postObj: {
-                title: string;
-                content: string;
-                status: string;
-                tags: string[];
-            } = req.body;
-            console.log({htmlContent:postObj.content})
+            const postObj = req.body;
+            console.log({htmlContent:postObj.text})
             let htmlScrapper = new HTMLScrapper();
            
-            let summary = await htmlScrapper.getSummary({html:postObj.content});
-            let imageUrl = await htmlScrapper.getImageSrc({html:postObj.content});
-
+            let summary = await htmlScrapper.getSummary({html:postObj.text});
             let slug = v4();
             const { userId } = res.locals;
 
             const modifiedPostObj = {
                 ...postObj,
                 summary,
-                imageUrl,
                 slug,
                 userId,
             };
-            const post = await BlogPost.create(modifiedPostObj);
+            const post = await Blog.create(modifiedPostObj);
             res.status(responseStatusCode.CREATED).json({
                 status: responseStatus.SUCCESS,
                 message: "Successfully added a post",
-                items:post
+                item:post
             });
         } catch (err) {
             console.log(err);
@@ -274,15 +321,10 @@ export default function mediaController(app: express.Application) {
             let blogId = req.params.blogId;
             const { userId } = res.locals;
             var updatedPostObj;
-            const postObj: {
-                title?: string;
-                content?: string;
-                status?: string;
-                tags?: string[];
-            } = req.body;
+            const postObj = req.body;
             let htmlScrapper = new HTMLScrapper();
            
-            const post = await BlogPost.findByPk(blogId);
+            const post = await Blog.findByPk(blogId);
             if (!post) {
                 return res
                     .status(responseStatusCode.NOT_FOUND)
@@ -293,25 +335,26 @@ export default function mediaController(app: express.Application) {
                         )
                     );
             }
-            if(postObj.content){
+            if(postObj.text){
                 let summary = await htmlScrapper.getSummary({html: postObj.content });
-                let imageUrl = await htmlScrapper.getImageSrc({html:postObj.content});
                 updatedPostObj = {
                     ...postObj,
                     summary,
-                    imageUrl,
                     userId,
                 };
 
-            }
-            updatedPostObj = {
+            }else{
+                updatedPostObj = {
                 ...postObj,
                 userId,
             };
-            const affectedRow = await BlogPost.update(updatedPostObj, {
+
+            }
+            
+            const affectedRow = await Blog.update(updatedPostObj, {
                 where: { blogId },
             });
-            let updatedBlog = await BlogPost.findByPk(blogId)
+            let updatedBlog = await Blog.findByPk(blogId)
             res.status(responseStatusCode.ACCEPTED).json({
                 status: responseStatus.SUCCESS,
                 item:updatedBlog?.dataValues || {},
@@ -326,29 +369,13 @@ export default function mediaController(app: express.Application) {
         }
     });
 
-  ////////////////////// Get All Blog Status ////////////////////
-
-  app.get("/status", async (req: express.Request, res: express.Response) => {
-    try {
-        res.status(responseStatusCode.OK).json(
-            getResponseBody(responseStatus.SUCCESS, "", {
-                items: ["Published","Draft"],
-            })
-        );
-    } catch (err) {
-        console.log(err);
-        res.status(responseStatusCode.BAD_REQUEST).json(
-            getResponseBody(responseStatus.ERROR, "", { message: String(err) })
-        );
-    }
-});
 
     // Delete a post
     app.delete("/blogs/:blogId", async (req, res) => {
         const { blogId } = req.params;
 
         try {
-            const post = await BlogPost.findByPk(blogId);
+            const post = await Blog.findByPk(blogId);
             if (!post) {
                 return res.status(responseStatusCode.NOT_FOUND).json({
                     status: responseStatus.ERROR,
@@ -409,7 +436,7 @@ export default function mediaController(app: express.Application) {
                             {
                                 item: {
                                     affectedRow,
-                                    likedByMe: false,
+                                    liked: false,
                                     likeCounts: likes.count - 1,
                                 },
                             }
@@ -428,7 +455,7 @@ export default function mediaController(app: express.Application) {
                     {
                         item: {
                             affectedRow: 1,
-                            likedByMe: true,
+                            liked: true,
                             likeCounts: likes.count + 1,
                         },
                     }
@@ -483,7 +510,7 @@ export default function mediaController(app: express.Application) {
 
         try {
             const { blogId } = req.params;
-            const blog = await BlogPost.findOne({
+            const blog = await Blog.findOne({
                 where:{blogId}
             })
            
@@ -539,7 +566,7 @@ export default function mediaController(app: express.Application) {
                         let createdBy = await User.findOne({
                             where: { userId: comment.getDataValue("userId") },
                         });
-                        let likedByMe = likes.rows.some(
+                        let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
                         return {
@@ -547,7 +574,7 @@ export default function mediaController(app: express.Application) {
                             repliesCount: replies.count,
                             likesCount: likes.count,
                             createdBy,
-                            likedByMe,
+                            liked,
                         };
                     })
                 );
@@ -704,7 +731,7 @@ export default function mediaController(app: express.Application) {
                             {
                                 item: {
                                     affectedRow,
-                                    likedByMe: false,
+                                    liked: false,
                                     likesCount: likes.count - 1,
                                 },
                             }
@@ -722,7 +749,7 @@ export default function mediaController(app: express.Application) {
                     "Liked a comment sucessfully",
                     {
                         affectedRow: 1,
-                        likedByMe: true,
+                        liked: true,
                         likesCount: likes.count + 1,
                     }
                 )
@@ -804,7 +831,7 @@ export default function mediaController(app: express.Application) {
                         let createdBy = await User.findOne({
                             where: { userId: comment.getDataValue("userId") },
                         });
-                        let likedByMe = likes.rows.some(
+                        let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
                         return {
@@ -812,7 +839,7 @@ export default function mediaController(app: express.Application) {
                             repliesCount: replies.count,
                             likesCount: likes.count,
                             createdBy,
-                            likedByMe,
+                            liked,
                         };
                     })
                 );
@@ -857,98 +884,26 @@ export default function mediaController(app: express.Application) {
         }
     });
 
-    /////////////////////// EDITORS SECTIONS //////////////////////////////
-
-    /////////////   Add an editor /////////////////////
-
-    app.post("/editors/", async (req, res) => {
-        try {
-            const { userId } = req.body;
-            const editor = await Editor.create({
-                userId,
-            });
-            res.status(responseStatusCode.CREATED).json(
-                getResponseBody(
-                    responseStatus.SUCCESS,
-                    `Successsfully added an editor`,
-                    { items: editor.dataValues }
-                )
-            );
-        } catch (err) {
-            console.log(err);
-            res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
-            );
-        }
-    });
-
-    ////////////////////// Get All editors ////////////////////
-
-    app.get("/editors", async (req: express.Request, res: express.Response) => {
-        try {
-            const editors = await Editor.findAll();
-            let useEditors = await Promise.all(
-                editors.map(async (editor) => {
-                    let user = await User.findOne({
-                        where: { userId: editor.getDataValue("userId") },
-                    });
-                    return {
-                        editorId: editor.getDataValue("editorId"),
-                        ...user?.dataValues,
-                    };
-                })
-            );
-            res.status(responseStatusCode.OK).json(
-                getResponseBody(responseStatus.SUCCESS, "", {
-                    items: useEditors,
-                })
-            );
-        } catch (err) {
-            console.log(err);
-            res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: String(err) })
-            );
-        }
-    });
-
-    //////////////////// Delete an editor //////////////////
-
-    app.delete(
-        "/editors/:editorId",
-        async (req: express.Request, res: express.Response) => {
-            const { editorId } = req.params;
-            try {
-                const editor = await Editor.findByPk(editorId);
-                if (!editor) {
-                    return res.status(responseStatusCode.NOT_FOUND).json({
-                        status: responseStatus.ERROR,
-                        message: `Editor with Id ${editorId} does not exist`,
-                    });
-                }
-                await editor.destroy();
-                res.status(responseStatusCode.DELETED).json(
-                    getResponseBody(
-                        responseStatus.SUCCESS,
-                        "Successfully deleted a Editor"
-                    )
-                );
-            } catch (err) {
-                console.log(err);
-                res.status(responseStatusCode.BAD_REQUEST).json(
-                    getResponseBody(responseStatus.ERROR, "", { message: String(err) })
-                );
-            }
-        }
-    );
-
     /////////////////////////// BLOGGER SECTION //////////////////////////////////
 
     /////////////   Add a blogger or user /////////////////////
+    interface CreateUserType {
+        firstName: string;
+        middleName?: string;
+        lastName: string;
+        profileImage?: string;
+        password: string;
+        pinCode?: string;
+        gender: string;
+        accountNumber?: string | null;
+        dob: string;
+        email: string;
+      }
 
     app.post("/bloggers", async (req, res) => {
         try {
-            const {displayName,profilePicture} = req.body;
-            const user = await User.create( {displayName,profilePicture});
+            const data:Partial<CreateUserType> = req.body;
+            const user = await User.create(data);
             res.status(responseStatusCode.CREATED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
@@ -978,10 +933,15 @@ export default function mediaController(app: express.Application) {
                     limit:numRecs
                 
                 });
-
+               
                 res.status(responseStatusCode.OK).json(
                     getResponseBody(responseStatus.SUCCESS, "", {
-                        items: users,
+                        items: users.map((user) => {
+                            return {
+                                ...user.dataValues,
+                                fullName: user.getFullname(),
+                            };
+                        }),
                     })
                 );
             } catch (err) {
@@ -1000,7 +960,6 @@ export default function mediaController(app: express.Application) {
             "/bloggers/:userId",
             async (req: express.Request, res: express.Response) => {
                 try {
-                
                     const userId = req.params.userId
                     const blogger = await User.findOne({
                        where:{userId}

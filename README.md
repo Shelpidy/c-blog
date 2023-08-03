@@ -1,4 +1,4 @@
-## Steps to run the BlogPost server
+## Steps to run the Blog server
 **Step 1:**
 __Installing dependencies__
 - In your terminal run `npm install` to install depencies

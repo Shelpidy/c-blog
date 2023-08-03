@@ -7,8 +7,8 @@ CREATE TABLE Users (
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Create BlogPosts table
-CREATE TABLE BlogPosts (
+-- Create Blogs table
+CREATE TABLE Blogs (
   blogId BINARY(16) PRIMARY KEY,
   userId BINARY(16) NOT NULL,
   slug BINARY(16),

@@ -2,7 +2,7 @@
 
 module.exports = {
     up: async (queryInterface, Sequelize) => {
-        await queryInterface.createTable("BlogPosts", {
+        await queryInterface.createTable("Blogs", {
             blogId: {
                 type: Sequelize.UUID,
                 defaultValue: Sequelize.UUIDV4,
@@ -21,30 +21,11 @@ module.exports = {
             slug: {
                 type: Sequelize.UUID,
             },
-            lastUpdatedById: {
-                type: Sequelize.UUID,
-                references: {
-                    model: "Users",
-                    key: "userId",
-                },
-                onUpdate: "CASCADE",
-            },
-            publishedById: {
-                type: Sequelize.UUID,
-                references: {
-                    model: "Users",
-                    key: "userId",
-                },
-                onUpdate: "CASCADE",
-            },
             title: {
                 type: Sequelize.STRING,
             },
-            tags: {
-                type: Sequelize.JSON,
-            },
-            editors: {
-                type: Sequelize.JSON,
+            type: {
+                type: Sequelize.STRING,
             },
             url: {
                 type: Sequelize.STRING,
@@ -52,15 +33,22 @@ module.exports = {
             summary: {
                 type: Sequelize.STRING,
             },
-            content: {
-                type: Sequelize.TEXT,
-            },
-            imageUrl: {
-                type: Sequelize.STRING,
-            },
-            status: {
-                type: Sequelize.ENUM("draft", "published"),
-            },
+            text: Sequelize.TEXT,
+            images: Sequelize.JSON,
+            video: Sequelize.STRING,
+            shared: Sequelize.BOOLEAN,
+            fromUserId: {
+                    type: Sequelize.UUID,
+                    references: {
+                        model: "Users",
+                        key: "userId",
+                    },
+                    onDelete: "CASCADE",
+                    onUpdate: "CASCADE",
+                },
+            fromBlogId: {
+                    type: Sequelize.UUID,
+                },
             createdAt: {
                 type: Sequelize.DATE,
                 allowNull: false,
@@ -69,14 +57,11 @@ module.exports = {
                 type: Sequelize.DATE,
                 allowNull: false,
                 defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-            },
-            publishedAt: {
-                type: Sequelize.DATE,
-            },
+            }
         });
     },
 
     down: async (queryInterface, Sequelize) => {
-        await queryInterface.dropTable("BlogPosts");
+        await queryInterface.dropTable("Blogs");
     },
 };

@@ -2,18 +2,52 @@
 
 module.exports = {
     up: async (queryInterface, Sequelize) => {
-        await queryInterface.createTable("Users", {
+        await queryInterface.createTable("NotUsers", {
             userId: {
                 type: Sequelize.UUID,
                 defaultValue: Sequelize.UUIDV4,
                 primaryKey: true,
             },
-            profilePicture: {
+            firstName: {
                 type: Sequelize.STRING,
             },
-            displayName: {
+            middleName: {
                 type: Sequelize.STRING,
+            },
+            lastName: {
+                type: Sequelize.STRING,
+            },
+            profileImage: {
+                type: Sequelize.STRING,
+            },
+            password: {
+                type: Sequelize.STRING,
+            },
+            pinCode: {
+                type: Sequelize.STRING,
+            },
+            gender: {
+                type: Sequelize.STRING,
+            },
+            accountNumber: {
+                type: Sequelize.STRING,
+                allowNull: true,
+                unique: true,
+            },
+            dob: {
+                type: Sequelize.STRING,
+            },
+            email: {
+                type: Sequelize.STRING,
+                unique: true,
                 allowNull: false,
+            },
+            verified: {
+                type: Sequelize.BOOLEAN,
+                defaultValue:false
+            },
+            verificationRank:{
+                type:Sequelize.ENUM("low","medium","high")
             },
             createdAt: {
                 type: Sequelize.DATE,
@@ -28,6 +62,6 @@ module.exports = {
     },
 
     down: async (queryInterface, Sequelize) => {
-        await queryInterface.dropTable("Users");
+        await queryInterface.dropTable("NotUsers");
     },
 };

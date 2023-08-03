@@ -15,7 +15,7 @@ function Main(){
     let dataKey = process.argv[4]
     let data = process.argv[6]
     if(task === '--encode'){
-        if(!dataKey || dataKey === ('--data' || "-D")){
+        if(!dataKey || dataKey !== ('--data' || "-D")){
             console.log("Please run node token --encode  --data or -D [userId] for encoding to JWT")
             console.log("And run node token --decode  --data or -D [jwtToken] for decoding to user-data")
             process.exit()
@@ -27,9 +27,9 @@ function Main(){
         }
     }
     else if(task === '--decode'){
-        if(!dataKey || dataKey === ('--data' || "-D")){
+        if(!dataKey || dataKey !== ('--data' || "-D")){
             console.log("Please run node token --encode  --data or -D [userId] for encoding to JWT")
-            console.log("And run node token --decode  --data or -D [tokent] for decoding to user-data")
+            console.log("And run node token --decode  --data or -D [jwtToken] for decoding to user-data")
             process.exit()
         }
         else{

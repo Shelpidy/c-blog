@@ -192,13 +192,29 @@ export function hasPassedOneMonth(date: Date): boolean {
 }
 
 // Example usage
-const inputDate = new Date("2023-06-01");
-const result = hasPassedOneMonth(inputDate);
-console.log(result); // true or false
+// const inputDate = new Date("2023-06-01");
+// const result = hasPassedOneMonth(inputDate);
+// console.log(result); // true or false
 
 const SERVER_ID = process.env.SERVER_ID;
 
-export async function addUser(data: any) {
+interface UserType {
+    userId: string;
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    profileImage?: string;
+    password?: string;
+    pinCode?: string;
+    gender?: string;
+    accountNumber?: string | null;
+    dob?: string;
+    email: string;
+    createdAt: Date;
+    updatedAt?: Date;
+  }
+
+export async function addUser(data:UserType) {
     try {
         let personal = data;
         let newPersonalInfo;
@@ -214,12 +230,14 @@ export async function addUser(data: any) {
             "User created successfully.",
             savePersonalData
         );
-    } catch (err) {
+    } catch (err) { 
         throw err;
     }
 }
 
-export async function deleteUser(data: any) {
+
+
+export async function deleteUser(data:{userId:Pick<UserType,'userId'>}) {
     try {
         let { userId } = data;
         let deleteObj = await User.destroy({
@@ -233,7 +251,26 @@ export async function deleteUser(data: any) {
     }
 }
 
-export async function updateUser(data: any) {
+export async function updateUserVerification(data:{verificationData:{verified:boolean,verificationRank:string},userId:string}) {
+    try {
+        let {verificationData,userId } = data;
+        let personalInfo = await User.findOne({
+            where: { userId },
+        });
+        if (personalInfo) {
+            let upatedResponse = await User.update(verificationData,{where:{userId}})
+            console.log(
+                `Server with Id ${SERVER_ID} Row Affected:, ${upatedResponse[0]}`
+            );
+        } else {
+            console.log("User doesnot exist.");
+        }
+    } catch (err) {
+        throw err;
+    }
+}
+
+export async function updateUser(data:{key:string,value:any,userId:string}) {
     try {
         let { key, value, userId } = data;
         let personalInfo = await User.findOne({

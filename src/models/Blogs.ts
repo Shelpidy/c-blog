@@ -1,11 +1,11 @@
 import { DataTypes, Model } from "sequelize";
 import sequelize from "../database/connection";
 
-class Editor extends Model {}
+class Blog extends Model {}
 
-Editor.init(
+Blog.init(
     {
-        editorId: {
+        blogId: {
             type: DataTypes.UUID,
             allowNull: false,
             primaryKey: true,
@@ -13,12 +13,31 @@ Editor.init(
         },
         userId: {
             type: DataTypes.UUID,
+            allowNull: false,
             references: {
                 model: "Users",
                 key: "userId",
             },
             onDelete: "CASCADE",
             onUpdate: "CASCADE",
+        },
+        title: {
+            type: DataTypes.STRING,
+        },
+        images: {type:DataTypes.JSON},
+        video: {type:DataTypes.STRING},
+        shared:{type:DataTypes.BOOLEAN},
+        url: {
+            type: DataTypes.STRING,
+        },
+        summary: {
+            type: DataTypes.STRING,
+        },
+        slug: {
+            type: DataTypes.STRING,
+        },
+        text: {
+            type: DataTypes.TEXT,
         },
         createdAt: {
             type: DataTypes.DATE,
@@ -30,11 +49,13 @@ Editor.init(
     },
     {
         sequelize,
-        modelName: "Editor",
-        tableName: "Editors",
+        modelName: "Blog",
+        tableName: "Blogs",
         underscored: false,
         timestamps: true,
+        createdAt: "createdAt",
+        updatedAt: "updatedAt",
     }
 );
 
-export default Editor;
+export default Blog;

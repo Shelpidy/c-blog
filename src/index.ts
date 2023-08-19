@@ -22,8 +22,8 @@ runUserConsumer().catch(err =>{
 
 //// CONTROLLERS //////
 app.use(ProxyController)
-BlogController(app);
-MediaController(app)
+app.use(BlogController)
+app.use(MediaController)
 
 app.listen(PORT, () => {
     console.log(`Listening to port ${PORT}`);

@@ -1,9 +1,9 @@
-import express from "express";
+import express,{Router} from "express";
 import {
     getResponseBody,
     responseStatus,
     responseStatusCode,
-} from "../utils/utils";
+} from "../utils/Utils";
 import { v4 } from "uuid";
 import { Op } from "sequelize";
 import User from "../models/Users";
@@ -14,7 +14,9 @@ import Share from "../models/Shares";
 import { HTMLScrapper } from "../services/services";
 import Follow from "../models/Follows";
 
-export default function mediaController(app: express.Application) {
+type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
+
+    let app = Router()
     ///////////////// GET A SINGLE POST DATA BY blogId ////////////////////////////
 
     app.get(
@@ -67,7 +69,7 @@ export default function mediaController(app: express.Application) {
                 };
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    item: returnPost,
+                    data: returnPost,
                 });
             } catch (err) {
                 console.log(err);
@@ -131,7 +133,7 @@ export default function mediaController(app: express.Application) {
                 );
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: returnPosts,
+                    data: returnPosts,
                 });
             } catch (err) {
                 console.log(err);
@@ -210,7 +212,7 @@ export default function mediaController(app: express.Application) {
                 );
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: returnPosts,
+                    data: returnPosts,
                 });
             } catch (err) {
                 console.log(err);
@@ -271,7 +273,7 @@ export default function mediaController(app: express.Application) {
             );
             res.status(responseStatusCode.OK).json({
                 status: responseStatus.SUCCESS,
-                items: returnPosts,
+                data: returnPosts,
             });
         } catch (err) {
             console.log(err);
@@ -304,7 +306,7 @@ export default function mediaController(app: express.Application) {
             res.status(responseStatusCode.CREATED).json({
                 status: responseStatus.SUCCESS,
                 message: "Successfully added a post",
-                item:post
+                data:post
             });
         } catch (err) {
             console.log(err);
@@ -357,7 +359,7 @@ export default function mediaController(app: express.Application) {
             let updatedBlog = await Blog.findByPk(blogId)
             res.status(responseStatusCode.ACCEPTED).json({
                 status: responseStatus.SUCCESS,
-                item:updatedBlog?.dataValues || {},
+                data:updatedBlog?.dataValues || {},
                 affectedRow
             });
         } catch (err) {
@@ -434,7 +436,7 @@ export default function mediaController(app: express.Application) {
                             responseStatus.SUCCESS,
                             "unliked a post successfully",
                             {
-                                item: {
+                                data: {
                                     affectedRow,
                                     liked: false,
                                     likeCounts: likes.count - 1,
@@ -453,7 +455,7 @@ export default function mediaController(app: express.Application) {
                     responseStatus.SUCCESS,
                     "Liked a post sucessfully",
                     {
-                        item: {
+                        data: {
                             affectedRow: 1,
                             liked: true,
                             likeCounts: likes.count + 1,
@@ -491,7 +493,7 @@ export default function mediaController(app: express.Application) {
             );
 
             res.status(responseStatusCode.OK).json(
-                getResponseBody(responseStatus.SUCCESS, "", { items: users })
+                getResponseBody(responseStatus.SUCCESS, "", { data: users })
             );
         } catch (err) {
             console.log(err);
@@ -503,31 +505,7 @@ export default function mediaController(app: express.Application) {
 
     ///////////////  Change status of a given blog ///////////////////
 
-    //////////////////// Get all Editors of a blog post /////////////////////
 
-    app.get("/blogs/:blogId/editors", async (req, res) => {
-       
-
-        try {
-            const { blogId } = req.params;
-            const blog = await Blog.findOne({
-                where:{blogId}
-            })
-           
-            const users = await User.findAll({
-                        where: { userId: blog?.getDataValue("editors") ||''},
-                    });
-                   
-            res.status(responseStatusCode.OK).json(
-                getResponseBody(responseStatus.SUCCESS, "", { items: users })
-            );
-        } catch (err) {
-            console.log(err);
-            res.status(responseStatusCode.BAD_REQUEST).json(
-                getResponseBody(responseStatus.ERROR, "", { message: String(err)})
-            );
-        }
-    });
 
     // COMMENTS SECTION
 
@@ -580,7 +558,7 @@ export default function mediaController(app: express.Application) {
                 );
                 res.status(responseStatusCode.OK).json(
                     getResponseBody(responseStatus.SUCCESS, "", {
-                        items: _comments,
+                        data: _comments,
                     })
                 );
             } catch (err) {
@@ -607,7 +585,7 @@ export default function mediaController(app: express.Application) {
                 getResponseBody(
                     responseStatus.SUCCESS,
                     `Successsfully added a comment to blogId = ${blogId}`,
-                    { item: comment.dataValues }
+                    { data: comment.dataValues }
                 )
             );
         } catch (err) {
@@ -682,7 +660,7 @@ export default function mediaController(app: express.Application) {
             }
             res.status(responseStatusCode.ACCEPTED).json(
                 getResponseBody(responseStatus.SUCCESS, "Update successfully", {
-                   item:{...comment.dataValues,content:content},
+                   data:{...comment.dataValues,content:content},
                    affectedRow,
                 })
             );
@@ -729,7 +707,7 @@ export default function mediaController(app: express.Application) {
                             responseStatus.SUCCESS,
                             "unliked a comment successfully",
                             {
-                                item: {
+                                data: {
                                     affectedRow,
                                     liked: false,
                                     likesCount: likes.count - 1,
@@ -784,7 +762,7 @@ export default function mediaController(app: express.Application) {
             );
 
             res.status(responseStatusCode.OK).json(
-                getResponseBody(responseStatus.SUCCESS, "", { items: users })
+                getResponseBody(responseStatus.SUCCESS, "", { data: users })
             );
         } catch (err) {
             console.log(err);
@@ -817,7 +795,7 @@ export default function mediaController(app: express.Application) {
                 if (comments.length < 1) {
                     return res
                         .status(responseStatusCode.OK)
-                        .json(getResponseBody(responseStatus.SUCCESS, "",{items:[]}));
+                        .json(getResponseBody(responseStatus.SUCCESS, "",{data:[]}));
                 }
 
                 const _comments = await Promise.all(
@@ -845,7 +823,7 @@ export default function mediaController(app: express.Application) {
                 );
                 res.status(responseStatusCode.OK).json(
                     getResponseBody(responseStatus.SUCCESS, "", {
-                        items: _comments,
+                        data: _comments,
                     })
                 );
             } catch (err) {
@@ -873,7 +851,7 @@ export default function mediaController(app: express.Application) {
                 getResponseBody(
                     responseStatus.SUCCESS,
                     `Successsfully added a reply to commentId = ${commentId}`,
-                    { items: reply }
+                    { data: reply }
                 )
             );
         } catch (err) {
@@ -908,7 +886,7 @@ export default function mediaController(app: express.Application) {
                 getResponseBody(
                     responseStatus.SUCCESS,
                     `Successsfully added an User`,
-                    { items: user.dataValues }
+                    { data: user.dataValues }
                 )
             );
         } catch (err) {
@@ -936,7 +914,7 @@ export default function mediaController(app: express.Application) {
                
                 res.status(responseStatusCode.OK).json(
                     getResponseBody(responseStatus.SUCCESS, "", {
-                        items: users.map((user) => {
+                        data: users.map((user) => {
                             return {
                                 ...user.dataValues,
                                 fullName: user.getFullname(),
@@ -968,7 +946,7 @@ export default function mediaController(app: express.Application) {
     
                     res.status(responseStatusCode.OK).json(
                         getResponseBody(responseStatus.SUCCESS, "", {
-                            item:blogger,
+                            data:blogger,
                         })
                     );
                 } catch (err) {
@@ -1010,6 +988,8 @@ export default function mediaController(app: express.Application) {
         }
     );
 
+    export default app
+
     // Add a new like to a post
     //   app.post("/blogs/likes", async (req, res) => {
     //     const { commentId, userId } = req.body;
@@ -1026,4 +1006,4 @@ export default function mediaController(app: express.Application) {
     //        res.status(responseStatusCode.BAD_REQUEST).json(getResponseBody(responseStatus.ERROR,"",err));
     //     }
     //   });
-}
+

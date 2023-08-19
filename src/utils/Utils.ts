@@ -6,6 +6,8 @@ import User from "../models/Users";
 
 dotenv.config();
 
+type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
+
 // export async function smsConfirmationMessage() {
 //     let randCode = Math.floor(Math.random() * (9999 - 1000) + 10000);
 //     return {
@@ -251,7 +253,9 @@ export async function deleteUser(data:{userId:Pick<UserType,'userId'>}) {
     }
 }
 
-export async function updateUserVerification(data:{verificationData:{verified:boolean,verificationRank:string},userId:string}) {
+// type Verification = {verificationData:{verified:boolean,verificationRank:string},userId:string}
+
+export async function updateUserVerification(data:Verification) {
     try {
         let {verificationData,userId } = data;
         let personalInfo = await User.findOne({

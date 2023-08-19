@@ -1,17 +1,20 @@
-import express from "express";
+import express, { Router } from "express";
 import {
     getResponseBody,
     responseStatus,
     responseStatusCode,
-} from "../utils/utils";
+    updateUserVerification,
+} from "../utils/Utils";
 import { Op } from "sequelize";
 import User from "../models/Users";
 import Follow from "../models/Follows";
 import Blog from "../models/Blogs";
+import { runUpdateUserVerification } from "../events/producers";
 
-export default function mediaController(app: express.Application) {
 
-
+type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
+   
+   let app = Router()
     // Follow or unfollow a user
 
     app.put("/follows", async (req:express.Request, res:express.Response) => {
@@ -20,6 +23,7 @@ export default function mediaController(app: express.Application) {
             const follow = await Follow.findOne({
                 where: { followerId, followingId },
             });
+
 
             if (follow) {
                 let affectedRow = await Follow.destroy({
@@ -35,13 +39,28 @@ export default function mediaController(app: express.Application) {
                             )
                         );
                 }
+                const followers = await Follow.findAndCountAll()
+                if(followers.count > 5){
+                    let verificationData:Verification = {
+                        verificationData:{
+                            verified:true,
+                            verificationRank:"low"
+                        },
+                        userId:followingId
+                    }
+
+                    await Promise.all([ await updateUserVerification(verificationData), await runUpdateUserVerification(verificationData)])
+                   
+                   
+
+                }
                 return res
                     .status(responseStatusCode.ACCEPTED)
                     .json(
                         getResponseBody(
                             responseStatus.SUCCESS,
                             "Unfollowed successfully",
-                            {item:{ affectedRow, followed: false }}
+                            {data:{ affectedRow, followed: false }}
                         )
                     );
             }
@@ -54,7 +73,7 @@ export default function mediaController(app: express.Application) {
                 getResponseBody(
                     responseStatus.SUCCESS,
                     "Followed Sucessfully",
-                    {item:{newFollow: newFollow, followed: true }}
+                    {data:{newFollow: newFollow, followed: true }}
                 )
             );
         } catch (err) {
@@ -96,13 +115,13 @@ export default function mediaController(app: express.Application) {
                 }
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: users,
+                    data: users,
                 });
             } catch (err) {
                 console.log(err);
                 res.status(responseStatusCode.BAD_REQUEST).json({
                     status: responseStatus.ERROR,
-                    item:String(err),
+                    data:String(err),
                 });
             }
         }
@@ -135,7 +154,7 @@ export default function mediaController(app: express.Application) {
                 }
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: users,
+                    data: users,
                 });
             } catch (err) {
                 console.log(err);
@@ -172,7 +191,7 @@ export default function mediaController(app: express.Application) {
                 }
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    items: users,
+                    data: users,
                 });
             } catch (err) {
                 console.log(err);
@@ -208,14 +227,14 @@ export default function mediaController(app: express.Application) {
                 let setOne = new Set(userIds);
                 let setTwo = new Set(getUserFollowingIds);
                 const commonIds = new Array(
-                    ...new Set([...setOne].filter((item) => setTwo.has(item)))
+                    ...new Set([...setOne].filter((data) => setTwo.has(data)))
                 );
                 let usersLiked = await User.findAll({
                     where: { userId: [commonIds] },
                 });
 
                 res.status(responseStatusCode.OK).json(
-                    getResponseBody(responseStatus.SUCCESS, "", {item:{
+                    getResponseBody(responseStatus.SUCCESS, "", {data:{
                         likes,
                         sessionUsers: usersLiked,
                     }})
@@ -229,4 +248,4 @@ export default function mediaController(app: express.Application) {
         }
     );
 
-    }
+    export default app

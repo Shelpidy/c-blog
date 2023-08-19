@@ -5,7 +5,6 @@ module.exports = {
         await queryInterface.createTable("Follows", {
             followId: {
                 allowNull: false,
-                autoIncrement: true,
                 type: Sequelize.UUID,
                 defaultValue:Sequelize.UUIDV4,
                 primaryKey: true,

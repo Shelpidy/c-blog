@@ -1,5 +1,5 @@
 import { Router,Request,Response} from "express"
-import { getResponseBody, responseStatus, responseStatusCode } from "../utils/utils"
+import { getResponseBody, responseStatus, responseStatusCode } from "../utils/Utils"
 import Follow from "../models/Follows"
 import Like from "../models/Likes"
 import Blog from "../models/Blogs"
@@ -26,7 +26,7 @@ router.get("/follows/proxy/f-f/:userId",async(req:Request,res:Response)=>{
 
         res.status(responseStatusCode.OK).json({
             status: responseStatus.SUCCESS,
-            item: {followers,followings,totalPosts:totalBlogs,totalLikes},
+            data: {followers,followings,totalPosts:totalBlogs,totalLikes},
         });
 
     }catch(err) {

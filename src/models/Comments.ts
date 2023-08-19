@@ -23,7 +23,7 @@ Comment.init(
             onDelete: "CASCADE",
             onUpdate: "CASCADE",
         },
-        content: {
+        text: {
             type: DataTypes.TEXT,
             allowNull: false,
         },

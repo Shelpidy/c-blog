@@ -9,6 +9,9 @@ let BROKER_2 = process.env.BROKER_2||''
 let BROKER_3 = process.env.BROKER_3||''
 
 
+type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
+
+
 let kafka:Kafka = new Kafka({
     brokers:[BROKER_1,BROKER_2],
     clientId:process.env.SERVER_ID
@@ -40,15 +43,8 @@ export async function runNotificationProducer(value:TransferCommodityParams){
 
 }
 
-type VerificationParams = {
-    verifcationData:{
-        verified:boolean,
-        verificationRank:string
-    },
-    userId:string
-}
 
-export async function runUpdateUserVerification(value:VerificationParams){
+export async function runUpdateUserVerification(value:Verification){
     try{
         await producer.connect()
         producer.send({

@@ -1,6 +1,6 @@
 import { Kafka, Consumer } from "kafkajs";
 import dotenv from "dotenv";
-import { addUser, deleteUser, updateUser, updateUserVerification } from "../utils/utils";
+import { addUser, deleteUser, updateUser, updateUserVerification } from "../utils/Utils";
 
 dotenv.config();
 

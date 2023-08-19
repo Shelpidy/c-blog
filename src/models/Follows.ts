@@ -10,7 +10,6 @@ Follow.init(
             type: DataTypes.UUID,
             allowNull: false,
             defaultValue:DataTypes.UUIDV4,
-            autoIncrement: true,
             primaryKey: true,
         },
         followerId: {

@@ -1,6 +1,6 @@
 import axios from "axios";
 import Xray from "x-ray";
-import { jwtDecode, jwtEncode } from "../utils/Utils";
+import { jwtDecode, jwtEncode } from "../utils/utils";
 
 type HTMLScrapperParams = {
     url?: string;

@@ -39,6 +39,18 @@ Blog.init(
         text: {
             type: DataTypes.TEXT,
         },
+        fromUserId: {
+            type: DataTypes.UUID,
+            references: {
+                model: "Users",
+                key: "userId",
+            },
+            onDelete: "CASCADE",
+            onUpdate: "CASCADE",
+        },
+        fromBlogId: {
+            type: DataTypes.UUID,
+        },
         createdAt: {
             type: DataTypes.DATE,
             allowNull: false,

@@ -3,7 +3,7 @@ import {
     getResponseBody,
     responseStatus,
     responseStatusCode,
-} from "../utils/Utils";
+} from "../utils/utils";
 import { v4 } from "uuid";
 import { Op } from "sequelize";
 import User from "../models/Users";
@@ -64,8 +64,8 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                     likesCount: likes.count,
                     sharesCount: shares.count,
                     commentsCount:comments.count, 
-                    createdBy,
-                    ownedBy:ownedBy || null
+                    createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                    ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                 };
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
@@ -126,8 +126,8 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
-                            createdBy,
-                            ownedBy:ownedBy || null
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                            ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                         };
                     })
                 );
@@ -148,11 +148,12 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
      /////////////////// GET ALL POST BY A USER SESSION /////////////
 
      app.get(
-        "/blogs/sessions/",
+        "/sessions/blogs",
         async (req: express.Request, res: express.Response) => {
            
             try {
                 const { userId} = res.locals;
+                console.log({userId})
                 const { pageNumber = 1, numberOfRecords = 100} = req.query;
                 let numRecs = Number(numberOfRecords);
                 let start = (Number(pageNumber) - 1) * numRecs;
@@ -170,12 +171,12 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                     offset:start
                 });
 
-                if (!posts) {
-                    return res.status(responseStatusCode.NOT_FOUND).json({
-                        status: responseStatus.ERROR,
-                        message: `Post with userId ${userId} does not exist`,
-                    });
-                }
+                // if (!posts) {
+                //     return res.status(responseStatusCode.NOT_FOUND).json({
+                //         status: responseStatus.ERROR,
+                //         message: `Post with userId ${userId} does not exist`,
+                //     });
+                // }
                 let returnPosts = await Promise.all(
                     posts.map(async (post) => {
                         let likes = await Like.findAndCountAll({
@@ -205,8 +206,8 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
-                            createdBy,
-                            ownedBy:ownedBy || null
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                            ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                         };
                     })
                 );
@@ -266,8 +267,8 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         likesCount: likes.count,
                         sharesCount: shares.count,
                         commentsCount:comments.count, 
-                        createdBy,
-                        ownedBy:ownedBy || null
+                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                        ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                     };
                 })
             );
@@ -439,7 +440,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                                 data: {
                                     affectedRow,
                                     liked: false,
-                                    likeCounts: likes.count - 1,
+                                    likesCount: likes.count - 1,
                                 },
                             }
                         )
@@ -450,7 +451,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 refId: blogId,
                 createdAt: new Date(),
             });
-            res.status(responseStatusCode.CREATED).json(
+            res.status(responseStatusCode.ACCEPTED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
                     "Liked a post sucessfully",
@@ -458,7 +459,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         data: {
                             affectedRow: 1,
                             liked: true,
-                            likeCounts: likes.count + 1,
+                            likesCount: likes.count + 1,
                         },
                     }
                 )
@@ -536,22 +537,22 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 const _comments = await Promise.all(
                     comments.map(async (comment) => {
                         let replies = await Comment.findAndCountAll({
-                            where: { refId: blogId },
+                            where: { refId: comment.getDataValue('commentId') },
                         });
                         let likes = await Like.findAndCountAll({
-                            where: { refId: blogId },
+                            where: { refId:comment.getDataValue('commentId') },
                         });
                         let createdBy = await User.findOne({
                             where: { userId: comment.getDataValue("userId") },
                         });
                         let liked = likes.rows.some(
-                            (like) => like.getDataValue("userId") == userId
+                            (like) => like.getDataValue("userId") == comment.getDataValue("userId")
                         );
                         return {
                             ...comment.dataValues,
                             repliesCount: replies.count,
                             likesCount: likes.count,
-                            createdBy,
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
                             liked,
                         };
                     })
@@ -581,11 +582,29 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 content,
                 refId: blogId,
             });
+            let replies = await Comment.findAndCountAll({
+                where: { refId: comment.getDataValue("commentId")},
+            });
+            let likes = await Like.findAndCountAll({
+                where: { refId: comment.getDataValue("commentId")},
+            });
+            let createdBy = await User.findOne({
+                where: { userId: comment.getDataValue("userId") },
+            });
+            let liked = likes.rows.some(
+                (like) => like.getDataValue("userId") === comment.getDataValue("userId")
+            );
             res.status(responseStatusCode.CREATED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
                     `Successsfully added a comment to blogId = ${blogId}`,
-                    { data: comment.dataValues }
+                    { data:{
+                        ...comment.dataValues,
+                        repliesCount: replies.count,
+                        likesCount: likes.count,
+                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                        liked,
+                    } }
                 )
             );
         } catch (err) {
@@ -721,15 +740,15 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 refId: commentId,
                 createdAt: new Date(),
             });
-            res.status(responseStatusCode.CREATED).json(
+            res.status(responseStatusCode.ACCEPTED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
                     "Liked a comment sucessfully",
-                    {
+                    {data:{
                         affectedRow: 1,
                         liked: true,
                         likesCount: likes.count + 1,
-                    }
+                    }}
                 )
             );
         } catch (err) {
@@ -801,22 +820,22 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 const _comments = await Promise.all(
                     comments.map(async (comment) => {
                         let replies = await Comment.findAndCountAll({
-                            where: { refId: commentId },
+                            where: { refId: comment.getDataValue("commentId")},
                         });
                         let likes = await Like.findAndCountAll({
-                            where: { refId: commentId },
+                            where: { refId: comment.getDataValue("commentId")},
                         });
                         let createdBy = await User.findOne({
                             where: { userId: comment.getDataValue("userId") },
                         });
                         let liked = likes.rows.some(
-                            (like) => like.getDataValue("userId") == userId
+                            (like) => like.getDataValue("userId") === comment.getDataValue("userId")
                         );
                         return {
                             ...comment.dataValues,
                             repliesCount: replies.count,
                             likesCount: likes.count,
-                            createdBy,
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
                             liked,
                         };
                     })
@@ -847,11 +866,29 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 userId,
                 content,
             });
+            let replies = await Comment.findAndCountAll({
+                where: { refId: reply.getDataValue("commentId")},
+            });
+            let likes = await Like.findAndCountAll({
+                where: { refId: reply.getDataValue("commentId")},
+            });
+            let createdBy = await User.findOne({
+                where: { userId: reply.getDataValue("userId") },
+            });
+            let liked = likes.rows.some(
+                (like) => like.getDataValue("userId") === reply.getDataValue("userId")
+            );
             res.status(responseStatusCode.CREATED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
                     `Successsfully added a reply to commentId = ${commentId}`,
-                    { data: reply }
+                    { data:{
+                        ...reply.dataValues,
+                        repliesCount: replies.count,
+                        likesCount: likes.count,
+                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                        liked,
+                    }}
                 )
             );
         } catch (err) {

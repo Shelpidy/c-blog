@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { jwtDecode } from "../utils/Utils";
+import { jwtDecode } from "../utils/utils";
 
 export default async (request: Request, response: Response, next: NextFunction) => {
     let { authorization } = request.headers;

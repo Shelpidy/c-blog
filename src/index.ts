@@ -16,9 +16,9 @@ app.use(express.urlencoded({ extended: false }));
 
 ///// RUN USER CONSUMER FROM KAFKA BROKERS ////////
  
-runUserConsumer().catch(err =>{
-    console.log("Consumer Error from Server with Id",process.env.SERVER_ID,"=>",err)
-})
+// runUserConsumer().catch(err =>{
+//     console.log("Consumer Error from Server with Id",process.env.SERVER_ID,"=>",err)
+// })
 
 //// CONTROLLERS //////
 app.use(ProxyController)

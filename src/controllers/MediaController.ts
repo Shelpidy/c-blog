@@ -4,7 +4,7 @@ import {
     responseStatus,
     responseStatusCode,
     updateUserVerification,
-} from "../utils/Utils";
+} from "../utils/utils";
 import { Op } from "sequelize";
 import User from "../models/Users";
 import Follow from "../models/Follows";
@@ -103,19 +103,26 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                     })
                 ).filter(
                     (user) =>
-                        ![...ids, Number(userId)].includes(
+                        ![...ids,userId].includes(
                             user.getDataValue("userId")
                         )
                 );
+                let newUsers = await Promise.all(users.map(async(user)=>{
+                    return {
+                        ...user.dataValues,
+                        fullName:user.getFullname()
+                    }
+                }))
                 if (!users) {
                     return res.status(responseStatusCode.NOT_FOUND).json({
                         status: responseStatus.ERROR,
                         message: `User with userId ${userId} does not exist`,
                     });
                 }
+              
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    data: users,
+                    data: newUsers,
                 });
             } catch (err) {
                 console.log(err);

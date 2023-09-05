@@ -11,6 +11,7 @@ export default async (request: Request, response: Response, next: NextFunction) 
        console.log(decodedData)
         response.locals = {
             userId:decodedData?.userId,
+            token:decodedData?.token
         };
         next();
     } else {

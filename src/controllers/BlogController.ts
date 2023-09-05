@@ -330,72 +330,72 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
 
     // Get all posts
 
-    app.get("/blogs/", async (req, res) => {
-        try {
-            const { userId } = res.locals;
-            const { pageNumber = 1, numberOfRecords = 100 } = req.query;
-            let numRecs = Number(numberOfRecords);
-            let start = (Number(pageNumber) - 1) * numRecs;
-            const posts = await Blog.findAll({
-                order: [["createdAt", "DESC"]],
-                limit: numRecs,
-                offset: start,
-            });
-            let returnPosts = await Promise.all(
-                posts.map(async (post) => {
-                    let likes = await Like.findAndCountAll({
-                        where: { refId: post.getDataValue("blogId") },
-                    });
-                    let shares = await Share.findAndCountAll({
-                        where: { refId: post.getDataValue("blogId") },
-                    });
-                    let comments = await Comment.findAndCountAll({
-                        where: { refId: post.getDataValue("blogId") },
-                    });
-                    let createdBy = await User.findOne({
-                        where: { userId: post.getDataValue("userId") },
-                    });
+    // app.get("/blogs/", async (req, res) => {
+    //     try {
+    //         const { userId } = res.locals;
+    //         const { pageNumber = 1, numberOfRecords = 100 } = req.query;
+    //         let numRecs = Number(numberOfRecords);
+    //         let start = (Number(pageNumber) - 1) * numRecs;
+    //         const posts = await Blog.findAll({
+    //             order: [["createdAt", "DESC"]],
+    //             limit: numRecs,
+    //             offset: start,
+    //         });
+    //         let returnPosts = await Promise.all(
+    //             posts.map(async (post) => {
+    //                 let likes = await Like.findAndCountAll({
+    //                     where: { refId: post.getDataValue("blogId") },
+    //                 });
+    //                 let shares = await Share.findAndCountAll({
+    //                     where: { refId: post.getDataValue("blogId") },
+    //                 });
+    //                 let comments = await Comment.findAndCountAll({
+    //                     where: { refId: post.getDataValue("blogId") },
+    //                 });
+    //                 let createdBy = await User.findOne({
+    //                     where: { userId: post.getDataValue("userId") },
+    //                 });
 
-                    let ownedBy = await User.findOne({
-                        where: { userId: post.getDataValue("fromUserId") },
-                    });
+    //                 let ownedBy = await User.findOne({
+    //                     where: { userId: post.getDataValue("fromUserId") },
+    //                 });
 
-                    let {data:statusData,status:chatResponseStatus} = await axios.get(
-                        `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
-                            headers:{Authorization:`Bearer ${res.locals.token}`}
-                        }
-                    );
+    //                 let {data:statusData,status:chatResponseStatus} = await axios.get(
+    //                     `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
+    //                         headers:{Authorization:`Bearer ${res.locals.token}`}
+    //                     }
+    //                 );
     
-                    let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
-                    console.log({lastSeenStatus})
+    //                 let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+    //                 console.log({lastSeenStatus})
                 
-                    // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
-                    let liked = likes.rows.some(
-                        (like) => like.getDataValue("userId") == userId
-                    );
-                    return {
-                        blog:post.dataValues,
-                        liked,
-                        likesCount: likes.count,
-                        sharesCount: shares.count,
-                        commentsCount:comments.count, 
-                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
-                        ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
-                    };
-                })
-            );
-            res.status(responseStatusCode.OK).json({
-                status: responseStatus.SUCCESS,
-                data: returnPosts,
-            });
-        } catch (err) {
-            console.log(err);
-            res.status(responseStatusCode.BAD_REQUEST).json({
-                status: responseStatus.ERROR,
-                message: String(err),
-            });
-        }
-    });
+    //                 // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
+    //                 let liked = likes.rows.some(
+    //                     (like) => like.getDataValue("userId") == userId
+    //                 );
+    //                 return {
+    //                     blog:post.dataValues,
+    //                     liked,
+    //                     likesCount: likes.count,
+    //                     sharesCount: shares.count,
+    //                     commentsCount:comments.count, 
+    //                     createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
+    //                     ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
+    //                 };
+    //             })
+    //         );
+    //         res.status(responseStatusCode.OK).json({
+    //             status: responseStatus.SUCCESS,
+    //             data: returnPosts,
+    //         });
+    //     } catch (err) {
+    //         console.log(err);
+    //         res.status(responseStatusCode.BAD_REQUEST).json({
+    //             status: responseStatus.ERROR,
+    //             message: String(err),
+    //         });
+    //     }
+    // });
 
     // Add a new post
 

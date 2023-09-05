@@ -13,10 +13,87 @@ import Comment from "../models/Comments";
 import Share from "../models/Shares";
 import { HTMLScrapper } from "../services/services";
 import Follow from "../models/Follows";
+import axios from "axios";
+import sequelize from "../database/connection";
 
 type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
 
     let app = Router()
+
+    ///////////////// GET ALL BLOGS ORDERED BY RANDOM ////////////////////////////
+
+    app.get(
+        "/blogs/",
+        async (req: express.Request, res: express.Response) => {
+            try {
+                let userId = res.locals.userId;
+                const { pageNumber = 1, numberOfRecords = 100} = req.query;
+                let numRecs = Number(numberOfRecords);
+                let start = (Number(pageNumber) - 1) * numRecs;
+                const posts = await Blog.findAll({
+                    order: [sequelize.random()],
+                    limit: numRecs,
+                    offset: start
+                });
+                let returnPosts = await Promise.all(
+                    posts.map(async (post) => {
+                        let likes = await Like.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let shares = await Share.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let comments = await Comment.findAndCountAll({
+                            where: { refId: post.getDataValue("blogId") },
+                        });
+                        let createdBy = await User.findOne({
+                            where: { userId: post.getDataValue("userId") },
+                        });
+
+                        let ownedBy = await User.findOne({
+                            where: { userId: post.getDataValue("fromUserId") },
+                        });
+                    
+                        // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
+                        let liked = likes.rows.some(
+                            (like) => like.getDataValue("userId") == userId
+                        );
+                        let {data:statusData,status:chatResponseStatus} = await axios.get(
+                            `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
+                                headers:{Authorization:`Bearer ${res.locals.token}`}
+                            }
+                        );
+        
+                        let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                        console.log({lastSeenStatus})
+                        return {
+                            blog:post.dataValues,
+                            liked,
+                            likesCount: likes.count,
+                            sharesCount: shares.count,
+                            commentsCount:comments.count, 
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
+                            ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
+                        };
+                    })
+                );
+                res.status(responseStatusCode.OK).json({
+                    status: responseStatus.SUCCESS,
+                    data: returnPosts,
+                });
+            } catch (err) {
+                console.log(err);
+                res.status(responseStatusCode.BAD_REQUEST).json({
+                    status: responseStatus.ERROR,
+                    data: err,
+                });
+            }
+        }
+    );
+
+
+
+
     ///////////////// GET A SINGLE POST DATA BY blogId ////////////////////////////
 
     app.get(
@@ -58,14 +135,23 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 let liked = likes.rows.some(
                     (like) => like.getDataValue("userId") == userId
                 );
+
+                let {data:statusData,status:chatResponseStatus} = await axios.get(
+                    `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
+                        headers:{Authorization:`Bearer ${res.locals.token}`}
+                    }
+                );
+                let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                console.log({lastSeenStatus})
+
                 let returnPost = {
                     blog:post.dataValues,
                     liked,
                     likesCount: likes.count,
                     sharesCount: shares.count,
                     commentsCount:comments.count, 
-                    createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
-                    ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
+                    createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
+                    ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname(),lastSeenStatus} || null
                 };
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
@@ -120,13 +206,21 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
+                        let {data:statusData,status:chatResponseStatus} = await axios.get(
+                            `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
+                                headers:{Authorization:`Bearer ${res.locals.token}`}
+                            }
+                        );
+        
+                        let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                        console.log({lastSeenStatus})
                         return {
                             blog:post.dataValues,
                             liked,
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
-                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                             ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                         };
                     })
@@ -195,6 +289,15 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let ownedBy = await User.findOne({
                             where: { userId: post.getDataValue("fromUserId") },
                         });
+
+                        let {data:statusData,status:chatResponseStatus} = await axios.get(
+                            `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
+                                headers:{Authorization:`Bearer ${res.locals.token}`}
+                            }
+                        );
+        
+                        let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                        console.log({lastSeenStatus})
                     
                         // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
                         let liked = likes.rows.some(
@@ -206,7 +309,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
-                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                             ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                         };
                     })
@@ -256,6 +359,15 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                     let ownedBy = await User.findOne({
                         where: { userId: post.getDataValue("fromUserId") },
                     });
+
+                    let {data:statusData,status:chatResponseStatus} = await axios.get(
+                        `http://192.168.1.93:8080/user-status/proxy/${post.getDataValue("userId")}`,{
+                            headers:{Authorization:`Bearer ${res.locals.token}`}
+                        }
+                    );
+    
+                    let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                    console.log({lastSeenStatus})
                 
                     // let secondUser = await User.findOne({where:{id:post.getDataValue("fromId")}})
                     let liked = likes.rows.some(
@@ -267,7 +379,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         likesCount: likes.count,
                         sharesCount: shares.count,
                         commentsCount:comments.count, 
-                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                         ownedBy:{...ownedBy?.dataValues,fullName:ownedBy?.getFullname()} || null
                     };
                 })
@@ -548,11 +660,20 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == comment.getDataValue("userId")
                         );
+
+                        let {data:statusData,status:chatResponseStatus} = await axios.get(
+                            `http://192.168.1.93:8080/user-status/proxy/${comment.getDataValue("userId")}`,{
+                                headers:{Authorization:`Bearer ${res.locals.token}`}
+                            }
+                        );
+        
+                        let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                            console.log({lastSeenStatus})
                         return {
                             ...comment.dataValues,
                             repliesCount: replies.count,
                             likesCount: likes.count,
-                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                             liked,
                         };
                     })
@@ -594,6 +715,15 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
             let liked = likes.rows.some(
                 (like) => like.getDataValue("userId") === comment.getDataValue("userId")
             );
+
+            let {data:statusData,status:chatResponseStatus} = await axios.get(
+                `http://192.168.1.93:8080/user-status/proxy/${comment.getDataValue("userId")}`,{
+                    headers:{Authorization:`Bearer ${res.locals.token}`}
+                }
+            );
+
+            let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+            console.log({lastSeenStatus})
             res.status(responseStatusCode.CREATED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
@@ -602,7 +732,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         ...comment.dataValues,
                         repliesCount: replies.count,
                         likesCount: likes.count,
-                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                         liked,
                     } }
                 )
@@ -831,11 +961,20 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") === comment.getDataValue("userId")
                         );
-                        return {
+
+                        let {data:statusData,status:chatResponseStatus} = await axios.get(
+                            `http://192.168.1.93:8080/user-status/proxy/${comment.getDataValue("userId")}`,{
+                                headers:{Authorization:`Bearer ${res.locals.token}`}
+                            }
+                        );
+
+                        let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                        console.log({lastSeenStatus})
+                                    return {
                             ...comment.dataValues,
                             repliesCount: replies.count,
                             likesCount: likes.count,
-                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                            createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                             liked,
                         };
                     })
@@ -878,6 +1017,15 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
             let liked = likes.rows.some(
                 (like) => like.getDataValue("userId") === reply.getDataValue("userId")
             );
+
+            let {data:statusData,status:chatResponseStatus} = await axios.get(
+                `http://192.168.1.93:8080/user-status/proxy/${reply.getDataValue("userId")}`,{
+                    headers:{Authorization:`Bearer ${res.locals.token}`}
+                }
+            );
+
+            let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+            console.log({lastSeenStatus})
             res.status(responseStatusCode.CREATED).json(
                 getResponseBody(
                     responseStatus.SUCCESS,
@@ -886,7 +1034,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         ...reply.dataValues,
                         repliesCount: replies.count,
                         likesCount: likes.count,
-                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname()},
+                        createdBy:{...createdBy?.dataValues,fullName:createdBy?.getFullname(),lastSeenStatus},
                         liked,
                     }}
                 )
@@ -951,12 +1099,23 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                
                 res.status(responseStatusCode.OK).json(
                     getResponseBody(responseStatus.SUCCESS, "", {
-                        data: users.map((user) => {
+                        data: await Promise.all(users.map(async (user) => {
+
+                            let {data:statusData,status:chatResponseStatus} = await axios.get(
+                                `http://127.0.0.1:8080/user-status/proxy/${user.getDataValue("userId")}`,{
+                                    headers:{Authorization:`Bearer ${res.locals.token}`}
+                                }
+                            );
+
+                            let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                            console.log({lastSeenStatus})
                             return {
                                 ...user.dataValues,
                                 fullName: user.getFullname(),
+                                lastSeenStatus:lastSeenStatus
+
                             };
-                        }),
+                        })),
                     })
                 );
             } catch (err) {

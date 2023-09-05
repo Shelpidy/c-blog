@@ -10,6 +10,7 @@ import User from "../models/Users";
 import Follow from "../models/Follows";
 import Blog from "../models/Blogs";
 import { runUpdateUserVerification } from "../events/producers";
+import axios from "axios";
 
 
 type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
@@ -107,18 +108,29 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                             user.getDataValue("userId")
                         )
                 );
-                let newUsers = await Promise.all(users.map(async(user)=>{
-                    return {
-                        ...user.dataValues,
-                        fullName:user.getFullname()
-                    }
-                }))
+                
                 if (!users) {
                     return res.status(responseStatusCode.NOT_FOUND).json({
                         status: responseStatus.ERROR,
                         message: `User with userId ${userId} does not exist`,
                     });
                 }
+
+                let newUsers = await Promise.all(users.map(async(user)=>{
+              
+                    let {data:statusData,status:chatResponseStatus} = await axios.get(
+                        `http://192.168.1.93:8080/user-status/proxy/${userId}`,{
+                            headers:{Authorization:`Bearer ${res.locals.token}`}
+                        }
+                    );
+                    let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                    console.log({lastSeenStatus})
+                        return {
+                            ...user.dataValues,
+                            fullName:user.getFullname(),
+                            lastSeenStatus
+                        }
+                    }))
               
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
@@ -159,9 +171,24 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         message: `User with userId ${userId} does not exist`,
                     });
                 }
+                let newUsers = await Promise.all(users.map(async(user)=>{
+              
+                    let {data:statusData,status:chatResponseStatus} = await axios.get(
+                        `http://192.168.1.93:8080/user-status/proxy/${userId}`,{
+                            headers:{Authorization:`Bearer ${res.locals.token}`}
+                        }
+                    );
+                    let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
+                    console.log({lastSeenStatus})
+                        return {
+                            ...user.dataValues,
+                            fullName:user.getFullname(),
+                            lastSeenStatus
+                        }
+                    }))
                 res.status(responseStatusCode.OK).json({
                     status: responseStatus.SUCCESS,
-                    data: users,
+                    data: newUsers,
                 });
             } catch (err) {
                 console.log(err);

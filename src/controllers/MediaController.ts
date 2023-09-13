@@ -119,7 +119,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 let newUsers = await Promise.all(users.map(async(user)=>{
               
                     let {data:statusData,status:chatResponseStatus} = await axios.get(
-                        `http://192.168.1.93:8080/user-status/proxy/${userId}`,{
+                        `http://192.168.1.98:8080/user-status/proxy/${userId}`,{
                             headers:{Authorization:`Bearer ${res.locals.token}`}
                         }
                     );
@@ -174,7 +174,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 let newUsers = await Promise.all(users.map(async(user)=>{
               
                     let {data:statusData,status:chatResponseStatus} = await axios.get(
-                        `http://192.168.1.93:8080/user-status/proxy/${userId}`,{
+                        `http://192.168.1.98:8080/user-status/proxy/${userId}`,{
                             headers:{Authorization:`Bearer ${res.locals.token}`}
                         }
                     );

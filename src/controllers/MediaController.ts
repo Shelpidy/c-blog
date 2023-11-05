@@ -165,6 +165,8 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         order: [["createdAt", "DESC"]],
                     })
                 ).filter((user) => [...ids].includes(user.getDataValue("userId")));
+
+
                 if (!users) {
                     return res.status(responseStatusCode.NOT_FOUND).json({
                         status: responseStatus.ERROR,
@@ -172,18 +174,11 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                     });
                 }
                 let newUsers = await Promise.all(users.map(async(user)=>{
-              
-                    let {data:statusData,status:chatResponseStatus} = await axios.get(
-                        `http://192.168.1.98:8080/user-status/proxy/${userId}`,{
-                            headers:{Authorization:`Bearer ${res.locals.token}`}
-                        }
-                    );
-                    let lastSeenStatus = (statusData?.online?"online":statusData?.lastSeen)??""
-                    console.log({lastSeenStatus})
-                        return {
+                    let _following = await Follow.findOne({where:{[Op.and]:[{followerId:userId},{followingId:user.getDataValue("userId")}]}})
+                    return {
                             ...user.dataValues,
                             fullName:user.getFullname(),
-                            lastSeenStatus
+                             following:_following?true:false
                         }
                     }))
                 res.status(responseStatusCode.OK).json({
@@ -213,10 +208,22 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                     })
                 ).map((obj) => obj.getDataValue("followingId"));
                 //   console.log(ids)
-                const users = await User.findAll({
+                const _users = await User.findAll({
                     where: { userId: ids},
                     order: [["createdAt", "DESC"]],
                 });
+
+
+                let users = await Promise.all(_users.map(async(user)=>{
+                    return {
+                        ...user.dataValues,
+                        fullName:user.getFullname(),
+                        following:true,
+                    
+                    }
+
+                }))
+
                 if (!users) {
                     return res.status(responseStatusCode.NOT_FOUND).json({
                         status: responseStatus.ERROR,

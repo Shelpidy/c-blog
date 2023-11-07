@@ -219,7 +219,6 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         ...user.dataValues,
                         fullName:user.getFullname(),
                         following:true,
-                    
                     }
 
                 }))

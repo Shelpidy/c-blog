@@ -58,6 +58,10 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
+
+                        let reposted = shares.rows.some(
+                            (share) => share.getDataValue("userId") == userId
+                        );
                         let {data:statusData,status:chatResponseStatus} = await axios.get(
                             `http://192.168.1.98:8080/user-status/proxy/${post.getDataValue("userId")}`,{
                                 headers:{Authorization:`Bearer ${res.locals.token}`}
@@ -69,6 +73,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         return {
                             blog:post.dataValues,
                             liked,
+                            reposted,
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
@@ -135,7 +140,9 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 let liked = likes.rows.some(
                     (like) => like.getDataValue("userId") == userId
                 );
-
+                let reposted = shares.rows.some(
+                    (share) => share.getDataValue("userId") == userId
+                );
                 let {data:statusData,status:chatResponseStatus} = await axios.get(
                     `http://192.168.1.98:8080/user-status/proxy/${post.getDataValue("userId")}`,{
                         headers:{Authorization:`Bearer ${res.locals.token}`}
@@ -147,6 +154,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 let returnPost = {
                     blog:post.dataValues,
                     liked,
+                    reposted,
                     likesCount: likes.count,
                     sharesCount: shares.count,
                     commentsCount:comments.count, 
@@ -206,6 +214,10 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
+
+                        let reposted = shares.rows.some(
+                            (share) => share.getDataValue("userId") == userId
+                        );
                         let {data:statusData,status:chatResponseStatus} = await axios.get(
                             `http://192.168.1.98:8080/user-status/proxy/${post.getDataValue("userId")}`,{
                                 headers:{Authorization:`Bearer ${res.locals.token}`}
@@ -217,6 +229,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         return {
                             blog:post.dataValues,
                             liked,
+                            reposted,
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
@@ -303,9 +316,14 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                         let liked = likes.rows.some(
                             (like) => like.getDataValue("userId") == userId
                         );
+
+                        let reposted = shares.rows.some(
+                            (share) => share.getDataValue("userId") == userId
+                        );
                         return {
                             blog:post.dataValues,
                             liked,
+                            reposted,
                             likesCount: likes.count,
                             sharesCount: shares.count,
                             commentsCount:comments.count, 
@@ -416,11 +434,17 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
                 userId,
             };
             const post = await Blog.create(modifiedPostObj);
+
+            if(postObj.shared){
+                await Share.create({userId,refId:postObj.fromBlogId})
+            }
             res.status(responseStatusCode.CREATED).json({
                 status: responseStatus.SUCCESS,
                 message: "Successfully added a post",
-                data:post
+                data:post.dataValues
             });
+
+          
         } catch (err) {
             console.log(err);
             res.status(responseStatusCode.BAD_REQUEST).json({

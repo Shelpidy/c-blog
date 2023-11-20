@@ -833,7 +833,7 @@ type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"
             }
             res.status(responseStatusCode.ACCEPTED).json(
                 getResponseBody(responseStatus.SUCCESS, "Update successfully", {
-                   data:{...comment.dataValues,content:content},
+                   data:{...comment.dataValues},
                    affectedRow,
                 })
             );

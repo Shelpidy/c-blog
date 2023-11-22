@@ -12,7 +12,7 @@ import {
   getResponseBody,
   responseStatus,
   responseStatusCode,
-} from "../utils/utils";
+} from "../utils";
 
 const router = Router();
 

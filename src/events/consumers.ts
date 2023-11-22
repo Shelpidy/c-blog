@@ -5,7 +5,7 @@ import {
     deleteUser,
     updateUser,
     updateUserVerification,
-} from "../utils/utils";
+} from "../utils";
 
 dotenv.config();
 

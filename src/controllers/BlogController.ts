@@ -15,7 +15,7 @@ import {
     getResponseBody,
     responseStatus,
     responseStatusCode,
-} from "../utils/utils";
+} from "../utils";
 
 type Verification = {
     verificationData: {

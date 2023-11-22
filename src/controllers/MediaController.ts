@@ -11,7 +11,7 @@ import {
     responseStatus,
     responseStatusCode,
     updateUserVerification,
-} from "../utils/utils";
+} from "../utils";
 
 type Verification = {
     verificationData: {

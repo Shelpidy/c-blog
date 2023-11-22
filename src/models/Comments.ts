@@ -9,7 +9,7 @@ Comment.init(
             type: DataTypes.UUID,
             allowNull: false,
             primaryKey: true,
-            defaultValue:DataTypes.UUIDV4
+            defaultValue: DataTypes.UUIDV4,
         },
         refId: {
             type: DataTypes.UUID,
@@ -42,7 +42,7 @@ Comment.init(
         tableName: "Comments",
         underscored: false,
         timestamps: true,
-        updatedAt:"updatedAt"
+        updatedAt: "updatedAt",
     }
 );
 

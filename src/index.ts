@@ -13,17 +13,23 @@ app.use(api_access);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.get("/",(req:express.Request,res:express.Response)=>{
+    return res.status(200).json({
+        status:200,
+        message:'Welcome to Fimiz Blog API'
+    })
+})
 
 ///// RUN USER CONSUMER FROM KAFKA BROKERS ////////
- 
+
 // runUserConsumer().catch(err =>{
 //     console.log("Consumer Error from Server with Id",process.env.SERVER_ID,"=>",err)
 // })
 
 //// CONTROLLERS //////
-app.use(ProxyController)
-app.use(BlogController)
-app.use(MediaController)
+app.use(ProxyController);
+app.use(BlogController);
+app.use(MediaController);
 
 app.listen(PORT, () => {
     console.log(`Listening to port ${PORT}`);

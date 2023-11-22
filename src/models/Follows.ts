@@ -1,15 +1,14 @@
 import sequelize from "../database/connection";
 import { Model, DataTypes } from "sequelize";
 
-class Follow extends Model {
-}
+class Follow extends Model {}
 
 Follow.init(
     {
         followId: {
             type: DataTypes.UUID,
             allowNull: false,
-            defaultValue:DataTypes.UUIDV4,
+            defaultValue: DataTypes.UUIDV4,
             primaryKey: true,
         },
         followerId: {

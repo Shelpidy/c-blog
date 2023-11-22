@@ -9,7 +9,7 @@ Share.init(
             type: DataTypes.UUID,
             autoIncrement: true,
             primaryKey: true,
-            defaultValue:DataTypes.UUIDV4
+            defaultValue: DataTypes.UUIDV4,
         },
         refId: {
             type: DataTypes.UUID,

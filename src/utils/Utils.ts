@@ -6,7 +6,13 @@ import User from "../models/Users";
 
 dotenv.config();
 
-type Verification = {verificationData:{verified:boolean,verificationRank:"low"|"medium"|"high"},userId:string}
+type Verification = {
+    verificationData: {
+        verified: boolean;
+        verificationRank: "low" | "medium" | "high";
+    };
+    userId: string;
+};
 
 // export async function smsConfirmationMessage() {
 //     let randCode = Math.floor(Math.random() * (9999 - 1000) + 10000);
@@ -88,7 +94,7 @@ export async function jwtEncode(data: any) {
     return encodedData;
 }
 
-export async function jwtDecode(token: string):Promise<any> {
+export async function jwtDecode(token: string): Promise<any> {
     let decodedData = jwt.decode(token);
     return decodedData;
 }
@@ -214,9 +220,9 @@ interface UserType {
     email: string;
     createdAt: Date;
     updatedAt?: Date;
-  }
+}
 
-export async function addUser(data:UserType) {
+export async function addUser(data: UserType) {
     try {
         let personal = data;
         let newPersonalInfo;
@@ -232,14 +238,12 @@ export async function addUser(data:UserType) {
             "User created successfully.",
             savePersonalData
         );
-    } catch (err) { 
+    } catch (err) {
         throw err;
     }
 }
 
-
-
-export async function deleteUser(data:{userId:Pick<UserType,'userId'>}) {
+export async function deleteUser(data: { userId: Pick<UserType, "userId"> }) {
     try {
         let { userId } = data;
         let deleteObj = await User.destroy({
@@ -255,14 +259,16 @@ export async function deleteUser(data:{userId:Pick<UserType,'userId'>}) {
 
 // type Verification = {verificationData:{verified:boolean,verificationRank:string},userId:string}
 
-export async function updateUserVerification(data:Verification) {
+export async function updateUserVerification(data: Verification) {
     try {
-        let {verificationData,userId } = data;
+        let { verificationData, userId } = data;
         let personalInfo = await User.findOne({
             where: { userId },
         });
         if (personalInfo) {
-            let upatedResponse = await User.update(verificationData,{where:{userId}})
+            let upatedResponse = await User.update(verificationData, {
+                where: { userId },
+            });
             console.log(
                 `Server with Id ${SERVER_ID} Row Affected:, ${upatedResponse[0]}`
             );
@@ -274,7 +280,11 @@ export async function updateUserVerification(data:Verification) {
     }
 }
 
-export async function updateUser(data:{key:string,value:any,userId:string}) {
+export async function updateUser(data: {
+    key: string;
+    value: any;
+    userId: string;
+}) {
     try {
         let { key, value, userId } = data;
         let personalInfo = await User.findOne({

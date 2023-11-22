@@ -38,17 +38,17 @@ module.exports = {
             video: Sequelize.STRING,
             shared: Sequelize.BOOLEAN,
             fromUserId: {
-                    type: Sequelize.UUID,
-                    references: {
-                        model: "Users",
-                        key: "userId",
-                    },
-                    onDelete: "CASCADE",
-                    onUpdate: "CASCADE",
+                type: Sequelize.UUID,
+                references: {
+                    model: "Users",
+                    key: "userId",
                 },
+                onDelete: "CASCADE",
+                onUpdate: "CASCADE",
+            },
             fromBlogId: {
-                    type: Sequelize.UUID,
-                },
+                type: Sequelize.UUID,
+            },
             createdAt: {
                 type: Sequelize.DATE,
                 allowNull: false,
@@ -57,7 +57,7 @@ module.exports = {
                 type: Sequelize.DATE,
                 allowNull: false,
                 defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
-            }
+            },
         });
     },
 

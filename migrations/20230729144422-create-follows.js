@@ -6,7 +6,7 @@ module.exports = {
             followId: {
                 allowNull: false,
                 type: Sequelize.UUID,
-                defaultValue:Sequelize.UUIDV4,
+                defaultValue: Sequelize.UUIDV4,
                 primaryKey: true,
             },
             followerId: {

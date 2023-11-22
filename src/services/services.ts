@@ -12,7 +12,11 @@ export class HTMLScrapper {
     public imageUrl: string = "No Image";
     public url: string = "http://google.com";
 
-    public async setContentFromXray(name: string, _type: string,htmlContent:string) {
+    public async setContentFromXray(
+        name: string,
+        _type: string,
+        htmlContent: string
+    ) {
         try {
             let xray = Xray();
             console.log("HTML Content", htmlContent);
@@ -24,7 +28,7 @@ export class HTMLScrapper {
                     )((err, src) => {
                         if (err) {
                             console.log("XRAY ERROR", err);
-                            return
+                            return;
                         }
                         this.imageUrl = src;
                     });
@@ -53,9 +57,9 @@ export class HTMLScrapper {
     /**
      * getSummary
      */
-    public async getSummary({html:htmlContent}:{html:string}) {
+    public async getSummary({ html: htmlContent }: { html: string }) {
         try {
-            await this.setContentFromXray("p", "INNERCONTENT",htmlContent);
+            await this.setContentFromXray("p", "INNERCONTENT", htmlContent);
             console.log(this.summary);
             return this.summary;
         } catch (err) {
@@ -63,12 +67,11 @@ export class HTMLScrapper {
         }
     }
 
-
     /**
      * getImage
      */
-    public async getImageSrc({html:htmlContent}:{html:string}) {
-        await this.setContentFromXray("src", "ATTRIBUTE",htmlContent);
+    public async getImageSrc({ html: htmlContent }: { html: string }) {
+        await this.setContentFromXray("src", "ATTRIBUTE", htmlContent);
         console.log(this.imageUrl);
         return this.imageUrl;
     }

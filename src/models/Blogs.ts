@@ -9,7 +9,7 @@ Blog.init(
             type: DataTypes.UUID,
             allowNull: false,
             primaryKey: true,
-            defaultValue:DataTypes.UUIDV4
+            defaultValue: DataTypes.UUIDV4,
         },
         userId: {
             type: DataTypes.UUID,
@@ -24,9 +24,9 @@ Blog.init(
         title: {
             type: DataTypes.STRING,
         },
-        images: {type:DataTypes.JSON},
-        video: {type:DataTypes.STRING},
-        shared:{type:DataTypes.BOOLEAN},
+        images: { type: DataTypes.JSON },
+        video: { type: DataTypes.STRING },
+        shared: { type: DataTypes.BOOLEAN },
         url: {
             type: DataTypes.STRING,
         },

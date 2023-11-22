@@ -23,20 +23,18 @@ jobs:
           EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/"
           SCRIPT_BEFORE: |
            cd home
+           ls -la
 
            echo "Updating linux packages"
            sudo apt-get update -y
 
-           echo "Giving execution permission to fimiz"
-           chmod +x fimiz.sh
-
-           echo "Setting up ENVS or running fimiz.sh"
-           ./fimiz.sh
-
-           echo "Running docker-compose"
-           docker-compuse up --build
-
           SCRIPT_AFTER: |
-           whoami
-           ls -al
-           echo $RSYNC_STDOUT
+            echo "Giving execution permission to fimiz"
+            chmod +x fimiz.sh
+
+            echo "Setting up ENVS or running fimiz.sh"
+            ./fimiz.sh
+
+            echo "Running docker-compose"
+            docker-compuse up --build
+            echo $RSYNC_STDOUT

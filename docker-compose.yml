@@ -6,10 +6,6 @@ services:
             - 1111:6000
         environment:
             - PORT=6000
-            - MAIL_PORT=${MAIL_PORT}
-            - MAIL_HOST=${MAIL_HOST}
-            - MAIL_USER=${MAIL_USER}
-            - MAIL_PASS=${MAIL_PASS}
             - PG_DB_PASSWORD=${PG_DB_PASSWORD}
             - PG_DB_USERNAME=${PG_DB_USERNAME}
             - PG_DB_HOST=${PG_DB_HOST}

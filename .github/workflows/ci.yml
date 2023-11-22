@@ -38,7 +38,7 @@ jobs:
         run: docker build . --file Dockerfile --tag blog
 
       - name: Tagging the blog server image
-        run: docker tag blog:latest blog
+        run: docker tag fimiz/blog:latest blog
 
       - name: Push blog server image to Dockerhub
         run: docker push fimiz/blog:latest
@@ -47,7 +47,7 @@ jobs:
         run: docker build ./nginx --file Dockerfile --tag blog-nginx
       
       - name: Tagging the blog-nginx server image
-        run: docker tag blog-nginx:latest blog-nginx
+        run: docker tag fimiz/blog-nginx:latest blog-nginx
       
       - name: Push blog-nginx server image to Dockerhub
         run: docker push fimiz/blog-nginx:latest

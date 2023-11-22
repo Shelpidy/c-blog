@@ -6,6 +6,8 @@ import User from "../models/Users";
 
 dotenv.config();
 
+
+
 type Verification = {
     verificationData: {
         verified: boolean;

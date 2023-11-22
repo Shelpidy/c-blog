@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "Setting up envs"
 
 export PORT=6000
 export MAIL_PORT=465
@@ -13,5 +14,9 @@ export API_ACCESS_KEY="mexu2023medishk2"
 export SMS_API_KEY="9d035dbc"
 export SMS_SECRET_KEY="fUr53lsNeWpUL1iV"
 export ENV="production"
+
+echo "Done setting up envs"
+
+echo $PORT
 
 

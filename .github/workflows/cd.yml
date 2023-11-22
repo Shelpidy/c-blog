@@ -24,7 +24,7 @@ jobs:
           SCRIPT_BEFORE: |
            cd home
            
-           echo "Updating linux packages"
+           echo "UPDATING LINUX PACKAGES"
            sudo apt-get update -y
 
            ls
@@ -35,8 +35,16 @@ jobs:
            echo "SETTING ENVS WITH fimiz.sh"
            ./fimiz.sh
 
+           echo "LOGIN TO DOCKERHUB"
+           sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+
+           echo "REMOVE OLD DOCKER CONTAINER"
+
+           sudo docker-compose down
+           sudo docker rmi fimiz/blog:lastet
+
            echo "RUNNING DOCKER-COMPOSE"
-           docker-compuse up --build
+           sudo docker-compose up --build
 
           SCRIPT_AFTER: |
             echo $RSYNC_STDOUT

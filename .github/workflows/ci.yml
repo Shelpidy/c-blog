@@ -35,7 +35,7 @@ jobs:
         run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
       - name: Build the blog server docker image
-        run: docker build -t blog . 
+        run: docker build -t fimiz/blog . 
 
       - name: Push blog server image to Dockerhub
         run: docker push fimiz/blog:latest

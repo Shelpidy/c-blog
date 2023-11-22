@@ -1,8 +1,8 @@
 {
-    "name": "mexu-commodity",
+    "name": "fimiz-blog",
     "version": "1.0.0",
     "description": "",
-    "main": "index.js",
+    "main": "./dist/index.js",
     "scripts": {
         "start": "node ./dist/src/index.js",
         "build": "rimraf ./dist && tsc",
@@ -15,7 +15,7 @@
         "test": "jest"
     },
     "keywords": [],
-    "author": "",
+    "author": "Shelpidy",
     "license": "ISC",
     "dependencies": {
         "@types/node": "^18.11.18",

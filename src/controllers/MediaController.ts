@@ -1,16 +1,17 @@
 import express, { Router } from "express";
-import {
-    getResponseBody,
-    responseStatus,
-    responseStatusCode,
-    updateUserVerification,
-} from "../utils/utils";
+
 import { Op } from "sequelize";
 import User from "../models/Users";
 import Follow from "../models/Follows";
 import Blog from "../models/Blogs";
 import { runUpdateUserVerification } from "../events/producers";
 import axios from "axios";
+import {
+    getResponseBody,
+    responseStatus,
+    responseStatusCode,
+    updateUserVerification,
+} from "../utils/utils";
 
 type Verification = {
     verificationData: {

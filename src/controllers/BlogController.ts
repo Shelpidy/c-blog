@@ -1,9 +1,5 @@
 import express, { Router } from "express";
-import {
-    getResponseBody,
-    responseStatus,
-    responseStatusCode,
-} from "../utils/utils";
+
 import { v4 } from "uuid";
 import { Op } from "sequelize";
 import User from "../models/Users";
@@ -15,6 +11,11 @@ import { HTMLScrapper } from "../services/services";
 import Follow from "../models/Follows";
 import axios from "axios";
 import sequelize from "../database/connection";
+import {
+    getResponseBody,
+    responseStatus,
+    responseStatusCode,
+} from "../utils/utils";
 
 type Verification = {
     verificationData: {

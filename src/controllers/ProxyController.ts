@@ -1,9 +1,5 @@
 import { Router, Request, Response } from "express";
-import {
-    getResponseBody,
-    responseStatus,
-    responseStatusCode,
-} from "../utils/utils";
+
 import Follow from "../models/Follows";
 import Like from "../models/Likes";
 import Blog from "../models/Blogs";
@@ -12,6 +8,11 @@ import { Op } from "sequelize";
 import Share from "../models/Shares";
 import Comment from "../models/Comments";
 import axios from "axios";
+import {
+  getResponseBody,
+  responseStatus,
+  responseStatusCode,
+} from "../utils/utils";
 
 const router = Router();
 

@@ -7,7 +7,7 @@ on:
            - completed
           
 jobs:
-  build:
+  deploy:
 
     runs-on: ubuntu-latest
 
@@ -23,18 +23,20 @@ jobs:
           EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/"
           SCRIPT_BEFORE: |
            cd home
-           ls -la
-
+           
            echo "Updating linux packages"
            sudo apt-get update -y
 
+           ls
+
+           echo "GIVING EXEC PERMISSION TO fimiz.sh"
+           chmod +x fimiz.sh
+
+           echo "SETTING ENVS WITH fimiz.sh"
+           ./fimiz.sh
+
+           echo "RUNNING DOCKER-COMPOSE"
+           docker-compuse up --build
+
           SCRIPT_AFTER: |
-            echo "Giving execution permission to fimiz"
-            chmod +x fimiz.sh
-
-            echo "Setting up ENVS or running fimiz.sh"
-            ./fimiz.sh
-
-            echo "Running docker-compose"
-            docker-compuse up --build
             echo $RSYNC_STDOUT

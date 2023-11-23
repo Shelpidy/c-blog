@@ -1,5 +1,5 @@
 name: CI Pipeline
-run-name: Running CI Pipeline
+run-name: Running CI Pipeline;formating,linting, building docker image and pushing image to dockerhub
 on:
   push:
     branches: [ "main" ]

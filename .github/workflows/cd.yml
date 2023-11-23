@@ -24,13 +24,12 @@ jobs:
            echo "UPDATING LINUX PACKAGES"
            sudo apt-get update -y
 
-           ls
+           ls -ls
 
            cd home
 
            ls 
 
-          
            echo "GIVING EXEC PERMISSION TO fimiz.sh"
            sudo chmod +x fimiz.sh
 

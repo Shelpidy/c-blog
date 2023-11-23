@@ -25,10 +25,6 @@ jobs:
            sudo apt-get update -y
 
            cd home
-           echo "REMOVE OLD DOCKER CONTAINER"
-           sudo docker-compose down
-           sudo docker rmi fimiz/blog -f
-           sudo docker rmi nginx_container -f
 
            echo "GIVING EXEC PERMISSION TO fimiz.sh"
            sudo chmod +x fimiz.sh
@@ -38,6 +34,14 @@ jobs:
 
            echo "LOGIN TO DOCKERHUB"
            sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+
+
+           if [ -f docker-compose.yml ];then
+              echo "REMOVE OLD DOCKER CONTAINER"
+              sudo docker-compose down
+              sudo docker rmi fimiz/blog -f
+              sudo docker rmi nginx_container -f
+           fi
 
            echo "RUNNING DOCKER-COMPOSE"
            sudo docker-compose up --build

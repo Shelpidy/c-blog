@@ -1,5 +1,5 @@
 name: CD Pipeline
-run-name: Running CD Pipeline; deploying to aws ec2,and spinning up docker-compose
+run-name: Running CD Pipeline; deploying to aws ec2
 on: 
     workflow_run:
         workflows: ["CI Pipeline"]
@@ -19,22 +19,11 @@ jobs:
           REMOTE_HOST: ${{ secrets.EC2_HOST_DNS}}
           REMOTE_USER: ${{ secrets.EC2_USERNAME }}
           TARGET: ${{ secrets.EC2_TARGET }}
-          EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/"
+          EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/,/.gitignore/"
           SCRIPT_BEFORE: |
-           cd home
            echo "UPDATING LINUX PACKAGES"
            sudo apt-get update -y
-          
+           rm -rf /home/*
           SCRIPT_AFTER: |
             echo $RSYNC_STDOUT
-            echo "GIVING EXEC PERMISSION TO fimiz.sh"
-            chmod +x fimiz.sh
- 
-            echo "SETTING ENVS WITH fimiz.sh"
-            ./fimiz.sh
- 
-            echo "LOGIN TO DOCKERHUB"
-            sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
- 
-            echo "RUNNING DOCKER-COMPOSE"
-            sudo docker-compose up --build
+       

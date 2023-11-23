@@ -1,0 +1,39 @@
+name: Run Pipeline
+run-name: Setting ENV and Running Dockercompose
+on: 
+    workflow_run:
+        workflows: ["CD Pipeline"]
+        types: 
+           - completed      
+jobs:
+  run:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run Images
+      uses: easingthemes/ssh-deploy@main
+      with:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY}}
+          REMOTE_HOST: ${{ secrets.EC2_HOST_DNS}}
+          REMOTE_USER: ${{ secrets.EC2_USERNAME }}
+          TARGET: ${{ secrets.EC2_TARGET }}
+          EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/,/.gitignore/,/src/,/nginx/,/migrations/,/config/"
+          SCRIPT_BEFORE: |
+            cd home
+            echo "GIVING EXEC PERMISSION TO fimiz.sh"
+            chmod +x fimiz.sh
+ 
+            echo "SETTING ENVS WITH fimiz.sh"
+            ./fimiz.sh
+ 
+            echo "LOGIN TO DOCKERHUB"
+            sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+ 
+            echo "RUNNING DOCKER-COMPOSE"
+            sudo docker-compose up --build
+
+          SCRIPT_AFTER: |
+            echo $RSYNC_STDOUT
+           

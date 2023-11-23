@@ -21,10 +21,19 @@ jobs:
           TARGET: ${{ secrets.EC2_TARGET }}
           EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/"
           SCRIPT_BEFORE: |
-           cd home
-           
            echo "UPDATING LINUX PACKAGES"
            sudo apt-get update -y
+           cd home
+
+           echo "REMOVE OLD DOCKER CONTAINER"
+           sudo docker-compose down
+           sudo docker rmi fimiz/blog -f
+
+           cd ..
+
+           rm -rf home
+           mkdir home
+           cd home
 
            echo "GIVING EXEC PERMISSION TO fimiz.sh"
           
@@ -36,10 +45,6 @@ jobs:
            echo "LOGIN TO DOCKERHUB"
            sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
 
-           echo "REMOVE OLD DOCKER CONTAINER"
-
-           sudo docker-compose down
-           sudo docker rmi fimiz/blog -f
 
            echo "RUNNING DOCKER-COMPOSE"
            sudo docker-compose up --build

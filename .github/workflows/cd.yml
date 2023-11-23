@@ -30,6 +30,7 @@ jobs:
 
            ls 
 
+          
            echo "GIVING EXEC PERMISSION TO fimiz.sh"
            sudo chmod +x fimiz.sh
 

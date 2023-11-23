@@ -21,15 +21,12 @@ jobs:
           TARGET: ${{ secrets.EC2_TARGET }}
           EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/"
           SCRIPT_BEFORE: |
+           cd home
            echo "UPDATING LINUX PACKAGES"
            sudo apt-get update -y
-
            ls -la
-           cd home
-           ls 
-
            echo "GIVING EXEC PERMISSION TO fimiz.sh"
-           sudo chmod +x fimiz.sh
+           chmod +x fimiz.sh
 
            echo "SETTING ENVS WITH fimiz.sh"
            ./fimiz.sh

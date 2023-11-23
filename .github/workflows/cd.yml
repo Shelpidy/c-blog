@@ -23,7 +23,7 @@ jobs:
           SCRIPT_BEFORE: |
            echo "UPDATING LINUX PACKAGES"
            sudo apt-get update -y
-           rm -rf /home/*
+           sudo rm -rf /home/*
           SCRIPT_AFTER: |
             echo $RSYNC_STDOUT
        

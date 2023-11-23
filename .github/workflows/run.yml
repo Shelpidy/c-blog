@@ -23,7 +23,7 @@ jobs:
           SCRIPT_BEFORE: |
             cd home
             echo "GIVING EXEC PERMISSION TO fimiz.sh"
-            chmod +x fimiz.sh
+            sudo chmod +x fimiz.sh
  
             echo "SETTING ENVS WITH fimiz.sh"
             ./fimiz.sh

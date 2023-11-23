@@ -44,7 +44,7 @@ jobs:
           echo "GIVING EXEC PERMISSION TO fimiz.sh"
           sudo chmod +x fimiz.sh
 
-          echo "SETTING ENVS WITH fimiz.sh"
+          echo "SETTING ENVS WITH FIMIZ FILE"
           ./fimiz.sh
 
           echo "LOGIN TO DOCKERHUB"

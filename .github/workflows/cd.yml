@@ -25,7 +25,6 @@ jobs:
            sudo apt-get update -y
 
            cd home
-
            echo "REMOVE OLD DOCKER CONTAINER"
            sudo docker-compose down
            sudo docker rmi fimiz/blog -f

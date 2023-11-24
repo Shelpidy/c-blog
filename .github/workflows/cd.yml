@@ -32,23 +32,37 @@ jobs:
            sudo rm -rf /home/*
           SCRIPT_AFTER: |
             echo $RSYNC_STDOUT
+          
+  run:
+      runs-on: ubuntu-latest
+      steps:
+      - uses: actions/checkout@v3
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY}}
+          REMOTE_HOST: ${{ secrets.EC2_HOST_DNS}}
+          REMOTE_USER: ${{ secrets.EC2_USERNAME }}
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}} 
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      - name: Run Servers and Nginx
+        run: |
+            echo "Connecting to ec2..."
+            echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
+            ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST}
 
-    - uses: appleboy/ssh-action@v1.0.0
-      name: Run the server
-      with:
-        host: ${{secrets.EC2_HOST_DNS}}
-        username: ${{secrets.EC2_USERNAME}}
-        key: ${{secrets.EC2_SSH_KEY}}
-        script: |
-          cd home
-          echo "GIVING EXEC PERMISSION TO fimiz.sh"
-          sudo chmod +x fimiz.sh
+            echo "Connected to ec2 successfully"
 
-          echo "SETTING ENVS WITH FIMIZ FILE"
-          ./fimiz.sh
+            cd home
 
-          echo "LOGIN TO DOCKERHUB"
-          sudo docker login -u ${{secrets.DOCKER_USERNAME}} -p ${{secrets.DOCKER_PASSWORD}}
+            ls -la 
+            
+            echo "GIVING EXEC PERMISSION TO fimiz.sh"
+            sudo chmod +x fimiz.sh
 
-          echo "RUNNING DOCKER-COMPOSE"
-          sudo docker-compose up --build
+            echo "SETTING ENVS WITH FIMIZ FILE"
+            ./fimiz.sh
+
+            echo "LOGIN TO DOCKERHUB"
+            sudo docker login -u ${DOCKER_USERNAME} -p ${secrets.DOCKER_PASSWORD}
+
+            echo "RUNNING DOCKER-COMPOSE"
+            sudo docker-compose up --build

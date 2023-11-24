@@ -19,15 +19,15 @@ jobs:
         echo "Connecting to ec2..."
         echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
 
-        ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} << 'EOF'
-          echo "Connected to ec2 successfully"
-          cd /path/to/remote/directory
-          ls -la 
-          echo "GIVING EXEC PERMISSION TO fimiz.sh"
-          sudo chmod +x fimiz.sh
-          echo "SETTING ENVS WITH FIMIZ FILE"
-          ./fimiz.sh
-        EOF
+        ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST}
+        
+        echo "Connected to ec2 successfully"
+        cd /path/to/remote/directory
+        ls -la 
+        echo "GIVING EXEC PERMISSION TO fimiz.sh"
+        sudo chmod +x fimiz.sh
+        echo "SETTING ENVS WITH FIMIZ FILE"
+        ./fimiz.sh
 
         echo "LOGIN TO DOCKERHUB"
         sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}

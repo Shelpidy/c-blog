@@ -22,23 +22,27 @@ jobs:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} 
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: |
-        echo "Connecting to ec2..."
-        echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
-
-        ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} "
-
-        echo "Connected to ec2 successfully"
-        cd /path/to/remote/directory
-        ls -la 
-        echo "GIVING EXEC PERMISSION TO fimiz.sh"
-        sudo chmod +x fimiz.sh
-        echo "SETTING ENVS WITH FIMIZ FILE"
-        ./fimiz.sh
-
-        echo "LOGIN TO DOCKERHUB"
-        sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-
-        echo "RUNNING DOCKER-COMPOSE"
-        sudo docker-compose up --build 
+            echo "Connecting to EC2..."
+            echo
+            
+            "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
+            
+            ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} << EOF
+                echo "Connected to EC2 successfully"
+                cd /path/to/remote/directory
+                ls -la
+            
+                echo "GIVING EXEC PERMISSION TO fimiz.sh"
+                sudo chmod +x fimiz.sh
+            
+                echo "SETTING ENVS WITH FIMIZ FILE"
+                ./fimiz.sh
+            
+                echo "LOGIN TO DOCKERHUB"
+                sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+            
+                echo "RUNNING DOCKER-COMPOSE"
+                sudo docker-compose up --build
+            EOF
 
     

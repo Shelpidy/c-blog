@@ -19,7 +19,7 @@ jobs:
           TARGET: ${{ secrets.EC2_TARGET }}
           EXCLUDE: "/dist/, /node_modules/,/.github/,/assets/,/models/,/.gitignore/"
           SCRIPT_BEFORE: |
-           echo "UPDATING LINUX PACKAGES"
+           echo "UPDATING LINUX PACKAGES ."
            sudo apt-get update -y
            cd home
            if [ -f docker-compose.yml ]

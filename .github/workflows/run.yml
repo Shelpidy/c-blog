@@ -11,38 +11,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-
-    - name: Run Servers and Nginx
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-        REMOTE_HOST: ${{ secrets.EC2_HOST_DNS }}
-        REMOTE_USER: ${{ secrets.EC2_USERNAME }}
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} 
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: |
-            echo "Connecting to EC2..."
-            echo
-            
-            "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
-            
-            ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} << EOF
-                echo "Connected to EC2 successfully"
-                cd /path/to/remote/directory
-                ls -la
-            
-                echo "GIVING EXEC PERMISSION TO fimiz.sh"
-                sudo chmod +x fimiz.sh
-            
-                echo "SETTING ENVS WITH FIMIZ FILE"
-                ./fimiz.sh
-            
-                echo "LOGIN TO DOCKERHUB"
-                sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-            
-                echo "RUNNING DOCKER-COMPOSE"
-                sudo docker-compose up --build
-            EOF
-
+        - name: Checkout code
+          uses: actions/checkout@v3
     
+        - name: Set up SSH key
+          run: |
+            echo "$SSH_PRIVATE_KEY" > private_key
+            chmod 600 private_key
+    
+        - name: Run Servers and Nginx
+          run: |
+            ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} << 'EOF'
+              echo "Connected to ec2 successfully"
+              cd /path/to/remote/directory
+              ls -la 
+              echo "GIVING EXEC PERMISSION TO fimiz.sh"
+              sudo chmod +x fimiz.sh
+              echo "SETTING ENVS WITH FIMIZ FILE"
+              ./fimiz.sh
+            EOF
+    
+            echo "LOGIN TO DOCKERHUB"
+            sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+    
+            echo "RUNNING DOCKER-COMPOSE"
+            sudo docker-compose up --build
+    
+          env:
+            SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+            REMOTE_HOST: ${{ secrets.EC2_HOST_DNS }}
+            REMOTE_USER: ${{ secrets.EC2_USERNAME }}
+            DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }} 
+            DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}

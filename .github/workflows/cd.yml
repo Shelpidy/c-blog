@@ -33,6 +33,6 @@ jobs:
           SCRIPT_AFTER: |
             echo $RSYNC_STDOUT
             echo "LIST OF DOCKER IMAGES.."
-            sudo docker images
+           
           
  

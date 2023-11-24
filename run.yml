@@ -16,7 +16,7 @@ jobs:
         - name: Set up SSH key
           run: |
             echo "$SSH_PRIVATE_KEY" > private_key
-            chmod 600 private_key
+            chmod 400 private_key
     
         - name: Run Servers and Nginx
           run: |

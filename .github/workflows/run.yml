@@ -7,9 +7,8 @@ on:
            - completed     
 
 jobs:
-  run:
+  deploy-2:
     runs-on: ubuntu-latest
-
     steps:
         - name: Checkout code
           uses: actions/checkout@v3
@@ -21,9 +20,9 @@ jobs:
     
         - name: Run Servers and Nginx
           run: |
-            ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} << 'EOF'
+            ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST} << EOF
               echo "Connected to ec2 successfully"
-              cd /path/to/remote/directory
+              cd home
               ls -la 
               echo "GIVING EXEC PERMISSION TO fimiz.sh"
               sudo chmod +x fimiz.sh

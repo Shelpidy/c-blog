@@ -19,8 +19,8 @@ jobs:
         echo "Connecting to ec2..."
         echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
 
-        ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST}
-        
+        ssh -o StrictHostKeyChecking=no -i private_key ${REMOTE_USER}@${REMOTE_HOST}"
+
         echo "Connected to ec2 successfully"
         cd /path/to/remote/directory
         ls -la 
@@ -33,7 +33,7 @@ jobs:
         sudo docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
 
         echo "RUNNING DOCKER-COMPOSE"
-        sudo docker-compose up --build
+        sudo docker-compose up --build "
 
       env:
         SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
